@@ -52,7 +52,7 @@ void read_elf_header(const char* elfFile) {
 }
 
 int main(int argc, char *argv[]){
-  if(argc != 2) printf("Erreur il manque des arguments")}
+  if(argc != 2) printf("Erreur il manque des arguments");
 
   read_elf_header(argv[1]);
 
