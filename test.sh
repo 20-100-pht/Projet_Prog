@@ -14,7 +14,7 @@ function header_test(){
   echo "Test du header de $(basename $fichier) :"
   errHeader=0
 
-  sortieA=$(./lecture $fichier)
+  sortieA=$(./lecture $fichier 0)
 
   #Test si le fichier est un fichier ELF
   if [[ $sortieA =~ "ERR_ELF_FILE" ]]
