@@ -5,6 +5,9 @@ vert="\e[0;32m"
 rougeB="\e[48;5;1m"
 vertB="\e[48;5;2m"
 
+#Compilation
+gcc -v lecture.c -o lecture
+clear
 
 function header_test(){
   fichier=$1

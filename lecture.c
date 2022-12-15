@@ -10,6 +10,7 @@
 #define ElfW(type) Elf32_ ## type
 #endif
 
+
 void read_elf_header(const char* elfFile) {
 
   ElfW(Ehdr) header;
@@ -22,19 +23,66 @@ void read_elf_header(const char* elfFile) {
     if (memcmp(header.e_ident, ELFMAG, SELFMAG) == 0) {
     }
 
+    //Liste des noms des machines, a completer si on a une machine differente
+    char *nomMachine[100];
+    for (int i = 0; i < 100; i++)
+    {
+      nomMachine[i]="Inconnu";
+    }
+    nomMachine[62]="Advanced Micro Devices X86-64";
+
+    //Liste des noms de type de fichiers
+    int typeFichier[9]={0,1,2,3,4,0xfe00,0xfeff,0xff00,0xffff};
+    char *typeFichierNom[9];
+    typeFichierNom[0]="No file type";
+    typeFichierNom[1]="REL (Relocatable file)";
+    typeFichierNom[2]="EXEC (Executable file)";
+    typeFichierNom[3]="DYN (Position-Independent Executable file)";
+    typeFichierNom[4]="CORE (Core file)";
+    typeFichierNom[5]="LOOS (Operating system-specific)";
+    typeFichierNom[6]="HIOS (Operating system-specific)";
+    typeFichierNom[7]="LOPR (Processor-specific)";
+    typeFichierNom[8]="HIPR (Processor-specific)";
+
+    //Liste des OS ou extensions ELF specifique aux ABI
+    char *nomOSABI[15];
+    for (int i = 0; i < 15; i++)
+    {
+      nomOSABI[i]="Inconnu";
+    }
+    nomOSABI[0]="UNIX - System V";
+
+    //Liste des type de data
+    char *nomData[3];
+    nomData[0]="Invalid data encoding";
+    nomData[1]="2's complement, little endian";
+    nomData[2]="2's complement, big endian";
+
+    //Liste des noms de classe
+    char *nomClasse[3];
+    nomClasse[0]="Invalid class";
+    nomClasse[1]="ELF32";
+    nomClasse[2]="ELF64";
+
+
     printf("ELF Header:\n");
     printf("  Magic:   ");
     for(int i = 0; i < 16; i++){
       if(header.e_ident[i] < 10) printf("0%x ", header.e_ident[i]);
       else printf("%x ", header.e_ident[i]);
     }
-    printf("\n  Class:                             ??\n");
-    printf("  Data:                              ??\n");
+    printf("\n  Class:                             %s\n",nomClasse[header.e_ident[4]]);
+    printf("  Data:                              %s\n",nomData[header.e_ident[5]]);
     printf("  Version:                           %d (current)\n",header.e_version);
-    printf("  OS/ABI:                            ??\n");
-    printf("  ABI Version:                       ??\n");
-    printf("  Type:                              %d\n",header.e_type);
-    printf("  Machine:                           %d\n",header.e_machine);
+    printf("  OS/ABI:                            %s\n",nomOSABI[header.e_ident[7]]);
+    printf("  ABI Version:                       %d\n",header.e_ident[8]);
+    for (int i = 0; i < 9; i++)
+    {
+      if(header.e_type == typeFichier[i]){
+        printf("  Type:                              %s\n",typeFichierNom[i]);
+      }
+    }
+    printf("  Machine:                           %s\n",nomMachine[header.e_machine]);
     printf("  Version:                           0x%d\n",header.e_version);
     printf("  Entry point address:               0x%ld\n",header.e_entry);
     printf("  Start of program headers:          %ld (bytes into file)\n",header.e_phoff);
