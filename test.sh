@@ -15,6 +15,14 @@ function header_test(){
   errHeader=0
 
   sortieA=$(./lecture $fichier)
+
+  #Test si le fichier est un fichier ELF
+  if [[ $sortieA =~ "ERR_ELF_FILE" ]]
+  then
+    echo -e $rouge"ERR_ELF_FILE : Le fichier donné n'est pas un fichier ELF."$blanc
+    return
+  fi
+
   sortieB=$(readelf -h $fichier)
 
   END=$(echo "$sortieA" | wc -l) 

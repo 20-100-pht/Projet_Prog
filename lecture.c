@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <elf.h>
 
@@ -20,7 +21,9 @@ void read_elf_header(const char* elfFile) {
 
     fread(&header, sizeof(header), 1, file);
 
-    if (memcmp(header.e_ident, ELFMAG, SELFMAG) == 0) {
+    if (memcmp(header.e_ident, ELFMAG, SELFMAG) != 0) {
+      printf("ERR_ELF_FILE : Le fichier donné n'est pas un fichier ELF.");
+      exit(0);
     }
 
     //Liste des noms des machines, a completer si on a une machine differente
