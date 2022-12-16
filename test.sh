@@ -6,7 +6,7 @@ rougeB="\e[48;5;1m"
 vertB="\e[48;5;2m"
 
 #Compilation
-gcc -v lecture.c -o lecture
+gcc -g lecture.c -o lecture
 clear
 
 function header_test(){
@@ -19,7 +19,7 @@ function header_test(){
   #Test si le fichier est un fichier ELF
   if [[ $sortieA =~ "ERR_ELF_FILE" ]]
   then
-    echo -e $rouge"ERR_ELF_FILE : Le fichier donné n'est pas un fichier ELF."$blanc
+    echo -e $rouge"ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian."$blanc
     return
   fi
 

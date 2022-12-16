@@ -2,6 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <elf.h>
+#include <byteswap.h>
+
+
+int is32_B_E(Elf32_Ehdr header){
+  if(header.e_ident[4] == 1 && header.e_ident[5] == 2 && memcmp(header.e_ident, ELFMAG, SELFMAG) == 0){
+    //Fichier bon
+    return 0;
+  }
+  return 1;
+}
+
+void swap_header(Elf32_Ehdr *header){
+  header->e_version = __bswap_32(header->e_version);
+  header->e_entry = __bswap_32(header->e_entry);
+  header->e_phoff = __bswap_32(header->e_phoff);
+  header->e_machine = __bswap_16(header->e_machine);
+  header->e_type = __bswap_16(header->e_type);
+  header->e_shoff = __bswap_32(header->e_shoff);
+  header->e_flags = __bswap_32(header->e_flags);
+  header->e_ehsize = __bswap_16(header->e_ehsize);
+  header->e_phentsize = __bswap_16(header->e_phentsize);
+  header->e_phnum = __bswap_16(header->e_phnum);
+  header->e_shentsize = __bswap_16(header->e_shentsize);
+  header->e_shnum = __bswap_16(header->e_shnum);
+  header->e_shstrndx = __bswap_16(header->e_shstrndx);
+}
 
 void read_elf_section_table(Elf32_Ehdr header, Elf32_Shdr sectionTable, unsigned char *buffer) {
 
@@ -69,6 +95,7 @@ void read_elf_header(Elf32_Ehdr header) {
     nomMachine[i]="Inconnu";
   }
   nomMachine[62]="Advanced Micro Devices X86-64";
+  nomMachine[40]="ARM";
 
   //Liste des noms de type de fichiers
   int typeFichier[9]={0,1,2,3,4,0xfe00,0xfeff,0xff00,0xffff};
@@ -121,12 +148,12 @@ void read_elf_header(Elf32_Ehdr header) {
       printf("  Type:                              %s\n",typeFichierNom[i]);
     }
   }
-  /*printf("  Machine:                           %s\n",nomMachine[header.e_machine]);*/
+  printf("  Machine:                           %s\n",nomMachine[header.e_machine]);
   printf("  Version:                           0x%d\n",header.e_version);
   printf("  Entry point address:               0x%d\n",header.e_entry);
   printf("  Start of program headers:          %d (bytes into file)\n",header.e_phoff);
-  printf("  Start of section headers:          %x (bytes into file)\n",header.e_shoff);
-  printf("  Flags:                             0x%d\n",header.e_flags);
+  printf("  Start of section headers:          %d (bytes into file)\n",header.e_shoff);
+  printf("  Flags:                             0x%x, Version5 EABI\n",header.e_flags);
   printf("  Size of this header:               %d (bytes)\n",header.e_ehsize);
   printf("  Size of program headers:           %d (bytes)\n",header.e_phentsize);
   printf("  Number of program headers:         %d\n",header.e_phnum);
@@ -154,11 +181,12 @@ int main(int argc, char *argv[]){
 
     Elf32_Ehdr header;
     memcpy(&header, &buffer[0], 52);
-
-    if (memcmp(header.e_ident, ELFMAG, SELFMAG) != 0) {
-      printf("ERR_ELF_FILE : Le fichier donné n'est pas un fichier ELF.");
-      exit(0);
+    swap_header(&header);
+    if(is32_B_E(header)){
+      printf("ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian\n");
+      return 1;
     }
+
 
     Elf32_Shdr section;
 
