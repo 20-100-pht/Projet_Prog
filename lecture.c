@@ -14,7 +14,7 @@
 void read_elf_section_table(const char* elfFile) {
 
   ElfW(Ehdr) header;
-  Elf32_Shdr sectionTable;
+  Elf64_Shdr sectionTable;
 
   FILE* file = fopen(elfFile, "rb");
   if(file) {
@@ -33,58 +33,62 @@ void read_elf_section_table(const char* elfFile) {
     int shnum = header.e_shnum;
     int shentsize = header.e_shentsize;
 
+    
     int typeSection[16]={0,1,2,3,4,5,6,7,8,9,10,11,0x70000000,0x7fffffff,0x80000000,0xffffffff};
     char *typeSectionNom[16];
-    typeSectionNom[0]="SHT_NULL        ";
-    typeSectionNom[1]="SHT_PROGBITS    ";
-    typeSectionNom[2]="SHT_SYMTAB      ";
-    typeSectionNom[3]="SHT_STRTAB      ";
-    typeSectionNom[4]="SHT_RELA        ";
-    typeSectionNom[5]="SHT_HASH        ";
-    typeSectionNom[6]="SHT_DYNAMIC     ";
-    typeSectionNom[7]="SHT_NOTE        ";
-    typeSectionNom[8]="SHT_NOBITS      ";
-    typeSectionNom[9]="SHT_REL         ";
-    typeSectionNom[10]="SHT_SHLIB       ";
-    typeSectionNom[11]="SHT_DYNSYM      ";
-    typeSectionNom[12]="SHT_LOPROC      ";
-    typeSectionNom[14]="SHT_HIPROC      ";
-    typeSectionNom[15]="SHT_LOUSER      ";
-    typeSectionNom[16]="SHT_HIUSER      ";
+    typeSectionNom[0]="NULL            ";
+    typeSectionNom[1]="PROGBITS        ";
+    typeSectionNom[2]="SYMTAB          ";
+    typeSectionNom[3]="STRTAB          ";
+    typeSectionNom[4]="RELA            ";
+    typeSectionNom[5]="HASH            ";
+    typeSectionNom[6]="DYNAMIC         ";
+    typeSectionNom[7]="NOTE            ";
+    typeSectionNom[8]="NOBITS          ";
+    typeSectionNom[9]="REL             ";
+    typeSectionNom[10]="SHLIB           ";
+    typeSectionNom[11]="DYNSYM          ";
+    typeSectionNom[12]="LOPROC          ";
+    typeSectionNom[14]="HIPROC          ";
+    typeSectionNom[15]="LOUSER          ";
+    typeSectionNom[16]="HIUSER          ";
     
     printf("There are %d section headers, starting at offset 0x%lx:\n\nSection Headers:\n  [Nr] Name              Type             Address           Offset\n       Size              EntSize          Flags  Link  Info  Align\n", shnum, shoff);
     for(long int i = shoff; i < shoff+(shentsize*shnum); i = i + shentsize){
       memcpy(&sectionTable, &buffer[i], shentsize);
 
+      
       if ((i-shoff)/shentsize < 10) printf("  [ %ld] ", (i-shoff)/shentsize); // indice
       else printf("  [%ld] ", (i-shoff)/shentsize);
+      
 
-      printf("????????????????  "); // Name
+      printf("????????????????%d  ", sectionTable.sh_name); // Name                              !!!
       for (int i = 0; i < 9; i++)  // Type
       {
         if(sectionTable.sh_type == typeSection[i]){
           printf("%s ",typeSectionNom[i]);
         }
       }
-      printf("????????????????  "); // Adresse
-      printf( "0x%08.8X         type-> %d     offset -> %d\n", sectionTable.sh_offset,sectionTable.sh_type, sectionTable.sh_offset); // Offset
-      printf("       %016.16d  ", sectionTable.sh_size); // Size
-      printf("%016.16d ", sectionTable.sh_entsize); // EntSize
-      printf(" ?        "); // Flags
-      printf("?     "); // Link
-      printf("?     "); // Info
-      printf("?   \n"); // Align
+      
+      printf("%016.16ld  ", sectionTable.sh_addr); // Adresse
+      printf( "%08.8lX\n", sectionTable.sh_offset); // Offset
+      printf("       %016.16lx  ", sectionTable.sh_size); // Size
+      printf("%016.16lx ", sectionTable.sh_entsize); // EntSize
+      printf(" ?        "); // Flags                                       !!!
+      printf("%d     ", sectionTable.sh_link); // Link
+      printf("%d     ", sectionTable.sh_info); // Info
+      printf("%ld   \n", sectionTable.sh_addralign); // Align
       
              
     }
-    printf("Key to Flags:\n  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n  L (link order), O (extra OS processing required), G (group), T (TLS),\n  C (compressed), x (unknown), o (OS specific), E (exclude),\n  D (mbind), l (large), p (processor specific)\n");
+    //printf("Key to Flags:\n  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n  L (link order), O (extra OS processing required), G (group), T (TLS),\n  C (compressed), x (unknown), o (OS specific), E (exclude),\n  D (mbind), l (large), p (processor specific)\n");
   }
 }
 
 
 void read_elf_header(const char* elfFile) {
 
-  ElfW(Ehdr) header;
+  Elf32_Ehdr header;
 
   FILE* file = fopen(elfFile, "rb");
   if(file) {
@@ -155,11 +159,11 @@ void read_elf_header(const char* elfFile) {
         printf("  Type:                              %s\n",typeFichierNom[i]);
       }
     }
-    printf("  Machine:                           %s\n",nomMachine[header.e_machine]);
+    /*printf("  Machine:                           %s\n",nomMachine[header.e_machine]);*/
     printf("  Version:                           0x%d\n",header.e_version);
-    printf("  Entry point address:               0x%ld\n",header.e_entry);
-    printf("  Start of program headers:          %ld (bytes into file)\n",header.e_phoff);
-    printf("  Start of section headers:          %ld (bytes into file)\n",header.e_shoff);
+    printf("  Entry point address:               0x%d\n",header.e_entry);
+    printf("  Start of program headers:          %d (bytes into file)\n",header.e_phoff);
+    printf("  Start of section headers:          %d (bytes into file)\n",header.e_shoff);
     printf("  Flags:                             0x%d\n",header.e_flags);
     printf("  Size of this header:               %d (bytes)\n",header.e_ehsize);
     printf("  Size of program headers:           %d (bytes)\n",header.e_phentsize);
@@ -167,7 +171,7 @@ void read_elf_header(const char* elfFile) {
     printf("  Size of section headers:           %d (bytes)\n",header.e_shentsize);
     printf("  Number of section headers:         %d\n",header.e_shnum);
     printf("  Section header string table index: %d\n",header.e_shstrndx);
-
+    
     fclose(file);
   }
 }

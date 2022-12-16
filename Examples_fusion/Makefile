@@ -86,7 +86,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-#noinst_PROGRAMS = fusion_result$(EXEEXT)
+noinst_PROGRAMS = fusion_result$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/../m4/ax_check_compile_flag.m4 \
@@ -103,9 +103,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am__fusion_result_SOURCES_DIST = eabi-none-lib.c
-##am_fusion_result_OBJECTS = eabi-none-lib.$(OBJEXT)
+am_fusion_result_OBJECTS = eabi-none-lib.$(OBJEXT)
 fusion_result_OBJECTS = $(am_fusion_result_OBJECTS)
-#fusion_result_DEPENDENCIES = fusion_result.o
+fusion_result_DEPENDENCIES = fusion_result.o
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -190,19 +190,19 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing aclocal-1.16
+ACLOCAL = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing aclocal-1.16
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing autoconf
-AUTOHEADER = ${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing autoheader
-AUTOMAKE = ${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing automake-1.16
-AWK = gawk
-CC = gcc
-CCAS = gcc
+AUTOCONF = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing autoconf
+AUTOHEADER = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing autoheader
+AUTOMAKE = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing automake-1.16
+AWK = mawk
+CC = arm-none-eabi-gcc
+CCAS = arm-none-eabi-gcc
 CCASDEPMODE = depmode=gcc3
-CCASFLAGS = 
+CCASFLAGS = -g -O2
 CCDEPMODE = depmode=gcc3
-CFLAGS = 
+CFLAGS = -g -O2
 CPPFLAGS = 
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
@@ -220,9 +220,9 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing makeinfo
+MAKEINFO = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing makeinfo
 MKDIR_P = /usr/bin/mkdir -p
-OBJEXT = 
+OBJEXT = o
 PACKAGE = arm-examples
 PACKAGE_BUGREPORT = Guillaume.Huard@imag.fr
 PACKAGE_NAME = Arm Examples
@@ -233,15 +233,15 @@ PACKAGE_VERSION = 1.0
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/bash
-STRIP = 
-VD_CROSS_NOPIE_CFLAGS = 
-VD_CROSS_NOSTDLIB_LDFLAGS = 
+STRIP = arm-none-eabi-strip
+VD_CROSS_NOPIE_CFLAGS = -no-pie
+VD_CROSS_NOSTDLIB_LDFLAGS = -nostdlib -Wl,--entry=0
 VERSION = 1.0
-abs_builddir = /home/oliver/Documents/GitHub/Projet_Prog/Examples_fusion
-abs_srcdir = /home/oliver/Documents/GitHub/Projet_Prog/Examples_fusion
-abs_top_builddir = /home/oliver/Documents/GitHub/Projet_Prog/Examples_fusion
-abs_top_srcdir = /home/oliver/Documents/GitHub/Projet_Prog/Examples_fusion
-ac_ct_CC = gcc
+abs_builddir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+abs_srcdir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+abs_top_builddir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+abs_top_srcdir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+ac_ct_CC = 
 am__include = include
 am__leading_dot = .
 am__quote = 
@@ -255,11 +255,11 @@ datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host_alias = 
+host_alias = arm-none-eabi
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/install-sh
+install_sh = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -283,18 +283,18 @@ top_srcdir = .
 ACLOCAL_AMFLAGS = -I ../m4
 
 # no code transformations to work with thumb
-AM_CFLAGS =  -mno-thumb-interwork
+AM_CFLAGS = -no-pie -mno-thumb-interwork
 
 # avec arm-none-eabi-, on a besoin de "puts" pour générer le programme
-##fusion_result_SOURCES = eabi-none-lib.c
-##AM_LDFLAGS = 
+fusion_result_SOURCES = eabi-none-lib.c
+AM_LDFLAGS = -nostdlib -Wl,--entry=0
 
 # il faudra linker avec fusion_result.o
-#fusion_result_LDADD = fusion_result.o
+fusion_result_LDADD = fusion_result.o
 
 # mais il faut aussi construire explicitement fusion_result.o
 # (cf la règle suivante)
-#nodist_EXTRA_fusion_result_SOURCES = fusion_result.o
+nodist_EXTRA_fusion_result_SOURCES = fusion_result.o
 EXTRA_DIST = file1.c file2.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -739,8 +739,8 @@ uninstall-am:
 
 
 # Appel du linker avec -no-stdlib et -r car on ne fait qu'un link partiel
-#fusion_result.o: file1.o file2.o
-#	$(AM_V_CCLD)$(LINK) -nostdlib -Wl,-r $^
+fusion_result.o: file1.o file2.o
+	$(AM_V_CCLD)$(LINK) -nostdlib -Wl,-r $^
 
 clean-local:
 	rm -f *.o fusion_result .deps/*.Po
