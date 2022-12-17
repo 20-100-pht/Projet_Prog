@@ -5,6 +5,68 @@
 #include <byteswap.h>
 
 
+//Fonction pour recuperer les flags de chaque section
+void get_flag(int flag, char *str_flag){
+  int len = 0;
+  
+  //Si SHF_WRITE est contenu dans flag alors on l'ajoute
+  if(flag & SHF_WRITE){
+    str_flag[len]='W';
+    len++;
+  }
+  if(flag & SHF_ALLOC){
+    str_flag[len]='A';
+    len++;
+  }
+  if(flag & SHF_EXECINSTR){
+    str_flag[len]='X';
+    len++;
+  }
+  if(flag & SHF_MERGE){
+    str_flag[len]='M';
+    len++;
+  }
+  if(flag & SHF_STRINGS){
+    str_flag[len]='S';
+    len++;
+  }
+  if(flag & SHF_INFO_LINK){
+    str_flag[len]='I';
+    len++;
+  }
+  if(flag & SHF_LINK_ORDER){
+    str_flag[len]='L';
+    len++;
+  }
+  if(flag & SHF_OS_NONCONFORMING){
+    str_flag[len]='O';
+    len++;
+  }
+  if(flag & SHF_GROUP){
+    str_flag[len]='G';
+    len++;
+  }
+  if(flag & SHF_TLS){
+    str_flag[len]='T';
+    len++;
+  }
+  if(flag & SHF_MASKOS){
+    str_flag[len]='o';
+    len++;
+  }
+  if(flag & SHF_MASKPROC){
+    str_flag[len]='p';
+    len++;
+  }
+
+  if(len==0){
+    str_flag[0]='\0';
+  }else{
+    str_flag[len]='\0';
+  }
+
+}
+
 int is32_B_E(Elf32_Ehdr header){
   if(header.e_ident[4] == 1 && header.e_ident[5] == 2 && memcmp(header.e_ident, ELFMAG, SELFMAG) == 0){
     //Fichier bon
@@ -34,8 +96,8 @@ void read_elf_section_table(Elf32_Ehdr header, Elf32_Shdr sectionTable, unsigned
   long int shoff = header.e_shoff;
   int shnum = header.e_shnum;
   int shentsize = header.e_shentsize;
-  
-  int typeSection[16]={0,1,2,3,4,5,6,7,8,9,10,11,0x70000000,0x7fffffff,0x80000000,0xffffffff};
+
+  int typeSection[17]={0,1,2,3,4,5,6,7,8,9,10,11,0x70000000,0x7fffffff,0x80000000,0xffffffff,0x70000003};
   char *typeSectionNom[16];
   typeSectionNom[0]="NULL            ";
   typeSectionNom[1]="PROGBITS        ";
@@ -50,39 +112,52 @@ void read_elf_section_table(Elf32_Ehdr header, Elf32_Shdr sectionTable, unsigned
   typeSectionNom[10]="SHLIB           ";
   typeSectionNom[11]="DYNSYM          ";
   typeSectionNom[12]="LOPROC          ";
-  typeSectionNom[14]="HIPROC          ";
-  typeSectionNom[15]="LOUSER          ";
-  typeSectionNom[16]="HIUSER          ";
-  
-  printf("There are %d section headers, starting at offset 0x%lx:\n\nSection Headers:\n  [Nr] Name              Type             Address           Offset\n       Size              EntSize          Flags  Link  Info  Align\n", shnum, shoff);
-  for(long int i = shoff; i < shoff+(shentsize*shnum); i = i + shentsize){
-    memcpy(&sectionTable, &buffer[i], shentsize);
+  typeSectionNom[13]="HIPROC          ";
+  typeSectionNom[14]="LOUSER          ";
+  typeSectionNom[15]="HIUSER          ";
+  typeSectionNom[16]="ARM_ATTRIBUTES  ";
 
-    
+  //Trouver la section SHT_SYMTAB pour avoir l'offset qui permet de trouver
+  //la table des strings
+  Elf32_Shdr shstrtab_section;
+  for (int i = 0; i < header.e_shnum; i++) {
+    memcpy(&shstrtab_section, &buffer[header.e_shoff + i * header.e_shentsize], header.e_shentsize);
+    if (shstrtab_section.sh_type == SHT_SYMTAB) {
+      break;
+    }
+  }
+
+  printf("There are %d section headers, starting at offset 0x%lx:\n\nSection Headers:\n  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al\n", shnum, shoff);
+  for(long int i = shoff; i < shoff+(shentsize*shnum); i = i + shentsize){
+    memcpy(&sectionTable, &buffer[i], shentsize);    
+
     if ((i-shoff)/shentsize < 10) printf("  [ %ld] ", (i-shoff)/shentsize); // indice
     else printf("  [%ld] ", (i-shoff)/shentsize);
     
-
-    printf("????????????????%d  ", sectionTable.sh_name); // Name                              !!!
-    for (int i = 0; i < 9; i++)  // Type
+    //Names
+    char *section_name = &buffer[__bswap_32(shstrtab_section.sh_offset) + __bswap_32(sectionTable.sh_name)];
+    printf("%-16s  ", section_name);
+    
+    for (int i = 0; i < 17; i++)  // Type
     {
-      if(sectionTable.sh_type == typeSection[i]){
-        printf("%s ",typeSectionNom[i]);
+      if(__bswap_32(sectionTable.sh_type) == typeSection[i]){
+        printf("%s",typeSectionNom[i]);
       }
     }
     
-    //printf("%016.16ld  ", sectionTable.sh_addr); // Adresse
-    //printf( "%08.8lX\n", sectionTable.sh_offset); // Offset
-    //printf("       %016.16lx  ", sectionTable.sh_size); // Size
-    //printf("%016.16lx ", sectionTable.sh_entsize); // EntSize
-    printf(" ?        "); // Flags                                       !!!
-    printf("%d     ", sectionTable.sh_link); // Link
-    printf("%d     ", sectionTable.sh_info); // Info
-    printf("%d   \n", sectionTable.sh_addralign); // Align
-    
-            
+    printf("%8.8x ", __bswap_32(sectionTable.sh_addr)); // Adresse
+    printf("%6.6x ", __bswap_32(sectionTable.sh_offset)); // Offset
+    printf("%6.6x ", __bswap_32(sectionTable.sh_size)); // Size
+    printf("%2.2x ", __bswap_32(sectionTable.sh_entsize)); // EntSize
+    char str_flag[10];
+    get_flag(__bswap_32(sectionTable.sh_flags),str_flag);
+    printf("%3s ",str_flag); // Flags
+    printf("%2d ", __bswap_32(sectionTable.sh_link)); // Link
+    printf("%3d ", __bswap_32(sectionTable.sh_info)); // Info
+    printf("%2d\n", __bswap_32(sectionTable.sh_addralign)); // Align
+
   }
-  printf("Key to Flags:\n  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n  L (link order), O (extra OS processing required), G (group), T (TLS),\n  C (compressed), x (unknown), o (OS specific), E (exclude),\n  D (mbind), l (large), p (processor specific)\n");
+  printf("Key to Flags:\n  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n  L (link order), O (extra OS processing required), G (group), T (TLS),\n  C (compressed), x (unknown), o (OS specific), E (exclude),\n  D (mbind), y (purecode), p (processor specific)\n");
 }
 
 
@@ -182,6 +257,7 @@ int main(int argc, char *argv[]){
     Elf32_Ehdr header;
     memcpy(&header, &buffer[0], 52);
     swap_header(&header);
+
     if(is32_B_E(header)){
       printf("ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian\n");
       return 1;
@@ -189,7 +265,6 @@ int main(int argc, char *argv[]){
 
 
     Elf32_Shdr section;
-
     if (!strcmp(argv[2], "0")) read_elf_header(header);
     if (!strcmp(argv[2], "1")) read_elf_section_table(header, section, buffer);
     return 0;
