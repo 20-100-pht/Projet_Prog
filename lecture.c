@@ -271,6 +271,6 @@ int main(int argc, char *argv[]){
 
   }
 
-  printf("Erreur lecture du fichier\n");
+  printf("ERR_ELF_FILE : Erreur lecture du fichier\n");
   return 1;
 }

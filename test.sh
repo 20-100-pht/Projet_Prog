@@ -9,21 +9,23 @@ vertB="\e[48;5;2m"
 gcc -g lecture.c -o lecture
 clear
 
-function header_test(){
+function line_test(){
   fichier=$1
-  echo "Test du header de $(basename $fichier) :"
-  errHeader=0
+  read_type=$2
+  test_num=$3
+  err=0
 
-  sortieA=$(./lecture $fichier 0)
+  sortieA=$(./lecture $fichier $test_num)
 
   #Test si le fichier est un fichier ELF
-  if [[ $sortieA =~ "ERR_ELF_FILE" ]]
+  if [[ $sortieA =~ "ERR_ELF_FILE" ]] || ! [[ -f $fichier ]]
   then
-    echo -e $rouge"ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian."$blanc
+    echo -e $rouge"ERR_ELF_FILE : Le fichier $fichier n'est pas un fichier ELF 32bits big endian."$blanc$'\n'
+    rt=-1
     return
   fi
 
-  sortieB=$(readelf -h $fichier)
+  sortieB=$(readelf $read_type $fichier)
 
   END=$(echo "$sortieA" | wc -l) 
   for ((i=1;i<=END;i++)); do
@@ -31,29 +33,67 @@ function header_test(){
     ligneA=$(echo "$sortieA" | sed -n "$i p")
     ligneB=$(echo "$sortieB" | sed -n "$i p")
 
-    if [[ $ligneA != $ligneB ]]
+    if [[ "$ligneA" != "$ligneB" ]]
     then
       echo -e $rouge$ligneA$blanc "->" $vert$ligneB$blanc
-      errHeader=$(expr $errHeader + 1)
+      err=$(expr $err + 1)
     fi
   done
 
-  if [[ $errHeader -eq 0 ]]
+  rt=$err
+}
+
+function header_test(){
+  fichier=$1
+  echo "(Etape 1) : Test du header de $(basename $fichier) :"
+  line_test $fichier $2 $3
+
+  if [[ $rt -eq 0 ]]
   then
-    echo -e $vertB"Test_header : $(basename $fichier) REUSSI."$blanc $'\n'
-  else
-    echo -e $rougeB"Test_header : $errHeader erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc $'\n'
+    echo -e $vertB"Test_header : $(basename $fichier) REUSSI."$blanc
+  elif [[ $rt -ne -1 ]]
+  then
+    echo -e $rougeB"Test_header : $errHeader erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
+  fi
+
+}
+
+function section_header_test(){
+  fichier=$1
+  echo "(Etape 2) : Test du section header de $(basename $fichier) :"
+  line_test $fichier $2 $3
+
+  if [[ $rt -eq 0 ]]
+  then
+    echo -e $vertB"Test_section_header : $(basename $fichier) REUSSI."$blanc $'\n'
+  elif [[ $rt -ne -1 ]]
+  then
+    echo -e $rougeB"Test_section_header : $errHeader erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc $'\n'
   fi
 }
 
-
 #Execution :
-#./test.sh fichierELF_1 fichierELF_2 fichierELF_N
-
+#./test.sh fichierELF_1 fichierELF_2 fichierELF_N nomDossierTest
+#Exemple :
+#./test.sh tests    file1.o
+#          dossier  fichier
 for fichier in $@
 do
 
-  #Test de recuperation du header
-  header_test $fichier
-  
+  if [[ -d $fichier ]]
+  then
+    for fich in $fichier/*
+    do
+      #Test de recuperation du header
+      header_test $fich "-h" 0
+      #Test de recuperation de la table des sections
+      section_header_test $fich "-S" 1
+    done
+  else
+    #Test de recuperation du header
+    header_test $fichier "-h" 0
+    #Test de recuperation de la table des sections
+    section_header_test $fichier "-S" 1
+  fi
+
 done
