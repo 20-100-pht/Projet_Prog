@@ -91,7 +91,7 @@ void swap_header(Elf32_Ehdr *header){
   header->e_shstrndx = __bswap_16(header->e_shstrndx);
 }
 
-void read_elf_section_table(Elf32_Ehdr header, Elf32_Shdr sectionTable, unsigned char *buffer) {
+void read_elf_section_header(Elf32_Ehdr header, Elf32_Shdr *TabSectionHeader, unsigned char *buffer) {
 
   long int shoff = header.e_shoff;
   int shnum = header.e_shnum;
@@ -127,34 +127,37 @@ void read_elf_section_table(Elf32_Ehdr header, Elf32_Shdr sectionTable, unsigned
     }
   }
 
+
+  Elf32_Shdr SectionHeader;
   printf("There are %d section headers, starting at offset 0x%lx:\n\nSection Headers:\n  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al\n", shnum, shoff);
   for(long int i = shoff; i < shoff+(shentsize*shnum); i = i + shentsize){
-    memcpy(&sectionTable, &buffer[i], shentsize);    
+    memcpy(&SectionHeader, &buffer[i], shentsize);    
+    memcpy(&TabSectionHeader[(i-shoff)/shentsize], &buffer[i], shentsize); 
 
     if ((i-shoff)/shentsize < 10) printf("  [ %ld] ", (i-shoff)/shentsize); // indice
     else printf("  [%ld] ", (i-shoff)/shentsize);
     
     //Names
-    char *section_name = &buffer[__bswap_32(shstrtab_section.sh_offset) + __bswap_32(sectionTable.sh_name)];
+    unsigned char *section_name = &buffer[__bswap_32(shstrtab_section.sh_offset) + __bswap_32(SectionHeader.sh_name)];
     printf("%-16s  ", section_name);
     
     for (int i = 0; i < 17; i++)  // Type
     {
-      if(__bswap_32(sectionTable.sh_type) == typeSection[i]){
+      if(__bswap_32(SectionHeader.sh_type) == typeSection[i]){
         printf("%s",typeSectionNom[i]);
       }
     }
     
-    printf("%8.8x ", __bswap_32(sectionTable.sh_addr)); // Adresse
-    printf("%6.6x ", __bswap_32(sectionTable.sh_offset)); // Offset
-    printf("%6.6x ", __bswap_32(sectionTable.sh_size)); // Size
-    printf("%2.2x ", __bswap_32(sectionTable.sh_entsize)); // EntSize
+    printf("%8.8x ", __bswap_32(SectionHeader.sh_addr)); // Adresse
+    printf("%6.6x ", __bswap_32(SectionHeader.sh_offset)); // Offset
+    printf("%6.6x ", __bswap_32(SectionHeader.sh_size)); // Size
+    printf("%2.2x ", __bswap_32(SectionHeader.sh_entsize)); // EntSize
     char str_flag[10];
-    get_flag(__bswap_32(sectionTable.sh_flags),str_flag);
+    get_flag(__bswap_32(SectionHeader.sh_flags),str_flag);
     printf("%3s ",str_flag); // Flags
-    printf("%2d ", __bswap_32(sectionTable.sh_link)); // Link
-    printf("%3d ", __bswap_32(sectionTable.sh_info)); // Info
-    printf("%2d\n", __bswap_32(sectionTable.sh_addralign)); // Align
+    printf("%2d ", __bswap_32(SectionHeader.sh_link)); // Link
+    printf("%3d ", __bswap_32(SectionHeader.sh_info)); // Info
+    printf("%2d\n", __bswap_32(SectionHeader.sh_addralign)); // Align
 
   }
   printf("Key to Flags:\n  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n  L (link order), O (extra OS processing required), G (group), T (TLS),\n  C (compressed), x (unknown), o (OS specific), E (exclude),\n  D (mbind), y (purecode), p (processor specific)\n");
@@ -263,10 +266,10 @@ int main(int argc, char *argv[]){
       return 1;
     }
 
+    Elf32_Shdr TabSectionHeader[header.e_shnum];
 
-    Elf32_Shdr section;
     if (!strcmp(argv[2], "0")) read_elf_header(header);
-    if (!strcmp(argv[2], "1")) read_elf_section_table(header, section, buffer);
+    if (!strcmp(argv[2], "1")) read_elf_section_header(header, TabSectionHeader, buffer );
     return 0;
 
   }
