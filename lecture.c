@@ -106,17 +106,28 @@ void swap_header(Elf32_Ehdr *header){
 }
 
 void read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeader, unsigned char *buffer, int num) {
+  int flag = 0;
   for (int i = 0; i < header.e_shnum; i++) {
 
     if(i == num){
-      printf("\nHex dump of section '%s' :\n", TabSectionHeader[i].nameNotid);
-      unsigned char *section_data = &buffer[__bswap_32(TabSectionHeader[i].sh_addr)+__bswap_32(TabSectionHeader[i].sh_offset)];
-      for (size_t j = 0; j < 32; j++)
-      {
-        printf("%02hhx",section_data[j]);
-        if((j)%4==3)printf(" ");
+      if(__bswap_32(TabSectionHeader[i].sh_size) != 0){
+        printf("\nHex dump of section '%s' :\n", TabSectionHeader[i].nameNotid);
+        unsigned char *section_data = &buffer[__bswap_32(TabSectionHeader[i].sh_addr)+__bswap_32(TabSectionHeader[i].sh_offset)];
+        for (int j = 0; j < __bswap_32(TabSectionHeader[i].sh_size); j++)
+        {
+          printf("%02hhx",section_data[j]);
+          if((j%4)==3){
+            printf(" "); 
+            flag ++;
+          }
+          if (flag == 4){
+            printf("\n");
+            flag = 0;
+          }
+        }
+        printf("\n");
       }
-      printf("\n");
+      else printf("Section '%s' has no data to dump.\n", TabSectionHeader[i].nameNotid);
       
     }
 
@@ -303,7 +314,7 @@ int main(int argc, char *argv[]){
 
     if (!strcmp(argv[1], "-h")) print_elf_header(header);
     else if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
-    else if (!strcmp(argv[1], "-x")) read_elf_section_dump(header, TabSectionHeader, buffer, 1);
+    else if (!strcmp(argv[1], "-x") && argc == 4) read_elf_section_dump(header, TabSectionHeader, buffer, atoi(argv[3]));
     else printf("Erreur nombre d'arguments\n");
     return 0;
 
