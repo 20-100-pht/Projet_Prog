@@ -111,7 +111,7 @@ void read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeade
   for (int i = 0; i < header.e_shnum; i++) {
 
     if(i == num){
-      if(__bswap_32(TabSectionHeader[i].sh_size) != 0){
+      if(__bswap_32(TabSectionHeader[i].sh_size) != 0 && __bswap_32(TabSectionHeader[i].sh_type) != 0x8){
         printf("\nHex dump of section '%s':\n", TabSectionHeader[i].nameNotid);
 
         if(i==1){//A regler!
@@ -126,7 +126,7 @@ void read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeade
         for (int j = 0; j < max; j++)
         {
           if(j%16==0){
-            printf("  0x%08d ",j/16*10);
+            printf("  0x%08x ",j);
           }
 
           printf("%02hhx",section_data[j]);
