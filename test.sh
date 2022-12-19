@@ -9,6 +9,7 @@ jauneB='\e[48;5;3m'
 
 
 debug=1
+nb_section=0
 
 #Compilation
 gcc -g lecture.c -o lecture
@@ -17,9 +18,15 @@ clear
 function line_test(){
   fichier=$1
   read_type=$2
+  test_num=$3
   err=0
 
-  sortieA=$(./lecture $read_type $fichier)
+  if [[ "$read_type" == "-x" ]]
+  then
+    sortieA=$(./lecture $read_type $fichier $test_num)
+  else
+    sortieA=$(./lecture $read_type $fichier)
+  fi
 
   #Test si le fichier est un fichier ELF
   if [[ $sortieA =~ "ERR_ELF_FILE" ]] || ! [[ -f $fichier ]]
@@ -29,7 +36,12 @@ function line_test(){
     return
   fi
 
-  sortieB=$(readelf $read_type $fichier)
+  if [[ $read_type == "-x" ]]
+  then
+    sortieB=$(readelf $read_type $test_num $fichier)
+  else
+    sortieB=$(readelf $read_type $fichier)
+  fi
 
   END=$(echo "$sortieA" | wc -l) 
   for ((i=1;i<=END;i++)); do
@@ -45,9 +57,38 @@ function line_test(){
     then
       echo -e $ligneA
     fi
+
+    #On recupere le nombre de sections.
+    num=$(echo $ligneA | grep -oh 'Section header string table index: [0-9]')
+    num=$(echo $num | awk '{ print $NF }')
+    if [[ $num != "" ]]
+    then
+      nb_section=$(($num))
+    fi
+
   done
 
   rt=$err
+}
+
+function section_content_test(){
+  fichier=$1
+  echo -e $jaune"(Etape 3) : Test du contenu de section de $(basename $fichier) :"$blanc
+  
+  err_num=0
+  for i in $(seq 1 $nb_section)
+  do
+    line_test $fichier $2 $i
+    err_num=$(expr $rt + $err_num)
+  done
+
+  if [[ $err_num -eq 0 ]]
+  then
+    echo -e $vertB"Test_content_sec : $(basename $fichier) REUSSI."$blanc $'\n'
+  elif [[ $err_num -ne -1 ]]
+  then
+    echo -e $rougeB"Test_content_sec : $err_num erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc $'\n'
+  fi
 }
 
 function header_test(){
@@ -60,9 +101,8 @@ function header_test(){
     echo -e $vertB"Test_header : $(basename $fichier) REUSSI."$blanc
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_header : $errHeader erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
+    echo -e $rougeB"Test_header : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
   fi
-
 }
 
 function section_header_test(){
@@ -72,10 +112,10 @@ function section_header_test(){
 
   if [[ $rt -eq 0 ]]
   then
-    echo -e $vertB"Test_section_header : $(basename $fichier) REUSSI."$blanc $'\n'
+    echo -e $vertB"Test_section_header : $(basename $fichier) REUSSI."$blanc
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_section_header : $errHeader erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc $'\n'
+    echo -e $rougeB"Test_section_header : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
   fi
 }
 
@@ -101,12 +141,16 @@ do
       header_test $fich "-h"
       #Test de recuperation de la table des sections
       section_header_test $fich "-S"
+      #Test d'affichage du contenu de sections
+      section_content_test $fich "-x"
     done
   else
     #Test de recuperation du header
     header_test $fichier "-h"
     #Test de recuperation de la table des sections
     section_header_test $fichier "-S"
+    #Test d'affichage du contenu de sections
+    section_content_test $fichier "-x"
   fi
 
 done

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <elf.h>
 #include <byteswap.h>
+#include <ctype.h>
 
 typedef struct {
   Elf32_Word sh_name;
@@ -111,19 +112,41 @@ void read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeade
 
     if(i == num){
       if(__bswap_32(TabSectionHeader[i].sh_size) != 0){
-        printf("\nHex dump of section '%s' :\n", TabSectionHeader[i].nameNotid);
+        printf("\nHex dump of section '%s':\n", TabSectionHeader[i].nameNotid);
+
+        if(i==1){//A regler!
+          printf(" NOTE: This section has relocations against it, but these have NOT been applied to this dump.\n");
+        }
+
+        char inAscii[17];
+        inAscii[16]='\0';
+        int affiche=0;
         unsigned char *section_data = &buffer[__bswap_32(TabSectionHeader[i].sh_addr)+__bswap_32(TabSectionHeader[i].sh_offset)];
-        for (int j = 0; j < __bswap_32(TabSectionHeader[i].sh_size); j++)
+        int max=__bswap_32(TabSectionHeader[i].sh_size);
+        for (int j = 0; j < max; j++)
         {
+          if(j%16==0){
+            printf("  0x%08d ",j/16*10);
+          }
+
           printf("%02hhx",section_data[j]);
+          inAscii[j%16]=(isprint(section_data[j]))?section_data[j]:'.';
+          inAscii[(j%16)+1]='\0';
+          affiche=0;
           if((j%4)==3){
-            printf(" "); 
+            printf(" ");
             flag ++;
           }
           if (flag == 4){
-            printf("\n");
+            printf("%s\n",inAscii);
+            affiche=1;
             flag = 0;
           }
+        }
+        int n=(16-(max%16))*2;
+        n+=(n%8==0)?(n/8)-1:(n/8);
+        if(affiche==0){
+          printf("%*c %s\n",n,' ',inAscii);
         }
         printf("\n");
       }
