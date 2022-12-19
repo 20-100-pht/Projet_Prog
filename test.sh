@@ -2,8 +2,13 @@
 blanc="\e[0m"
 rouge="\e[0;31m"
 vert="\e[0;32m"
+jaune='\e[0;33m'
 rougeB="\e[48;5;1m"
 vertB="\e[48;5;2m"
+jauneB='\e[48;5;3m'
+
+
+debug=1
 
 #Compilation
 gcc -g lecture.c -o lecture
@@ -12,10 +17,9 @@ clear
 function line_test(){
   fichier=$1
   read_type=$2
-  test_num=$3
   err=0
 
-  sortieA=$(./lecture $fichier $test_num)
+  sortieA=$(./lecture $read_type $fichier)
 
   #Test si le fichier est un fichier ELF
   if [[ $sortieA =~ "ERR_ELF_FILE" ]] || ! [[ -f $fichier ]]
@@ -37,6 +41,9 @@ function line_test(){
     then
       echo -e $rouge$ligneA$blanc "->" $vert$ligneB$blanc
       err=$(expr $err + 1)
+    elif [[ $debug == 0 ]]
+    then
+      echo -e $ligneA
     fi
   done
 
@@ -45,8 +52,8 @@ function line_test(){
 
 function header_test(){
   fichier=$1
-  echo "(Etape 1) : Test du header de $(basename $fichier) :"
-  line_test $fichier $2 $3
+  echo -e $jaune"(Etape 1) : Test du header de $(basename $fichier) :"$blanc
+  line_test $fichier $2
 
   if [[ $rt -eq 0 ]]
   then
@@ -60,8 +67,8 @@ function header_test(){
 
 function section_header_test(){
   fichier=$1
-  echo "(Etape 2) : Test du section header de $(basename $fichier) :"
-  line_test $fichier $2 $3
+  echo -e $jaune"(Etape 2) : Test du section header de $(basename $fichier) :"$blanc
+  line_test $fichier $2
 
   if [[ $rt -eq 0 ]]
   then
@@ -80,20 +87,26 @@ function section_header_test(){
 for fichier in $@
 do
 
+  if [[ $fichier == "-d" ]]
+  then
+    debug=0
+    continue
+  fi
+
   if [[ -d $fichier ]]
   then
     for fich in $fichier/*
     do
       #Test de recuperation du header
-      header_test $fich "-h" 0
+      header_test $fich "-h"
       #Test de recuperation de la table des sections
-      section_header_test $fich "-S" 1
+      section_header_test $fich "-S"
     done
   else
     #Test de recuperation du header
-    header_test $fichier "-h" 0
+    header_test $fichier "-h"
     #Test de recuperation de la table des sections
-    section_header_test $fichier "-S" 1
+    section_header_test $fichier "-S"
   fi
 
 done

@@ -302,8 +302,9 @@ int main(int argc, char *argv[]){
     init_TabSectionHeader(header, TabSectionHeader, buffer);
 
     if (!strcmp(argv[1], "-h")) print_elf_header(header);
-    if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
-    if (!strcmp(argv[1], "-x")) read_elf_section_dump(header, TabSectionHeader, buffer, 1);
+    else if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
+    else if (!strcmp(argv[1], "-x")) read_elf_section_dump(header, TabSectionHeader, buffer, 1);
+    else printf("Erreur nombre d'arguments\n");
     return 0;
 
   }
