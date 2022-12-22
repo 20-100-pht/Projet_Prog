@@ -20,6 +20,106 @@ typedef struct {
 } Elf32_Shdr_notELF;
 
 
+void read_elf_symbol_table(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeader, unsigned char *buffer) {
+  Elf32_Sym *symbolTable = NULL;
+  //Pointeur vers la table str
+  unsigned char *strTab;
+  int size = 0;
+
+  char *typeSectionNom[19];
+  typeSectionNom[0]="NOTYPE  ";
+  typeSectionNom[1]="OBJECT  ";
+  typeSectionNom[2]="FUNC    ";
+  typeSectionNom[3]="SECTION ";
+  typeSectionNom[4]="FILE    ";
+  typeSectionNom[5]="COMMON  ";
+  typeSectionNom[6]="TLS     ";
+  typeSectionNom[7]="LOOS    ";
+  typeSectionNom[8]="HIOS    ";
+  typeSectionNom[9]="LOPROC  ";
+  typeSectionNom[10]="LOPROC  ";
+  typeSectionNom[11]="HIPROC  ";
+  typeSectionNom[16]="NOTYPE  ";
+  typeSectionNom[17]="OBJECT  ";
+  typeSectionNom[18]="FUNC    ";
+
+  char *bindType[7];
+  bindType[0]="LOCAL  ";
+  bindType[1]="GLOBAL ";
+  bindType[2]="WEAK   ";
+  bindType[3]="LOOS   ";
+  bindType[4]="HIOS   ";
+  bindType[5]="LOPROC ";
+  bindType[6]="HIPROC ";
+
+  char *visType[7];
+  visType[0]="DEFAULT  ";
+  visType[1]="INTERNAL ";
+  visType[2]="HIDDEN   ";
+  visType[3]="PROTECTED";
+  visType[4]="EXPORTED ";
+  visType[5]="SINGLETON";
+  visType[6]="ELIMINATE";
+
+  int indType[9]={0,1,2,3,4,5,6,7,0xfff1};
+  char *indTypeNom[9];
+  indTypeNom[0]="UND ";
+  indTypeNom[1]="  1 ";
+  indTypeNom[2]="  2 ";
+  indTypeNom[3]="  3 ";
+  indTypeNom[4]="  4 ";
+  indTypeNom[5]="  5 ";
+  indTypeNom[6]="  6 ";
+  indTypeNom[7]="  7 ";
+  indTypeNom[8]="ABS ";
+
+  //On cherche la table des symbole et de str
+  for (int i = 0; i < header.e_shnum; i++) {
+
+    //Si table des symboles
+    if (__bswap_32(TabSectionHeader[i].sh_type) == SHT_SYMTAB){
+      //Prendre le nombre d'entrees
+      size = __bswap_32(TabSectionHeader[i].sh_size) / sizeof(Elf32_Sym);
+      symbolTable = malloc(size * sizeof(Elf32_Sym));
+      //Copy de la table symboles
+      memcpy(symbolTable, &buffer[__bswap_32(TabSectionHeader[i].sh_offset)], size * sizeof(Elf32_Sym));
+    };
+
+    if (__bswap_32(TabSectionHeader[i].sh_type) == SHT_STRTAB){
+      //adresse de la table str
+      strTab = &buffer[__bswap_32(TabSectionHeader[i].sh_addr)+__bswap_32(TabSectionHeader[i].sh_offset)];
+      break;
+    };
+  }
+
+  printf("\nSymbol table '.symtab' contains %d entries:\n   Num:    Value  Size Type    Bind   Vis      Ndx Name\n",size);
+  for (int j = 0; j < size; j++) {
+    printf("   %3d: ",j); // Num
+    printf("%8.8x  ", __bswap_32(symbolTable[j].st_value)); // Val
+    printf("%4d ", __bswap_32(symbolTable[j].st_size)); // Size
+    printf("%s", typeSectionNom[symbolTable[j].st_info]); // Type
+    printf("%s", bindType[symbolTable[j].st_info >> 4]); //Bind
+    printf("%s", visType[symbolTable[j].st_other]); // Vis
+    int i = 0;
+    //Chaque type d'index
+    for (i; i < 9; i++)
+    {
+      if(__bswap_16(symbolTable[j].st_shndx) != indType[i]) continue;
+      printf("%s", indTypeNom[i]); // Ndx
+      break;
+    }
+    //Si type est section alors shstrtab sinon strtab
+    if(symbolTable[j].st_info == 3){
+      printf("%s\n", TabSectionHeader[i].nameNotid); // Name
+    }else{
+      printf("%s\n", strTab + __bswap_32(symbolTable[j].st_name)); //Name
+    }
+
+  }
+
+  free(symbolTable);
+}
+
 //Fonction pour recuperer les flags de chaque section
 void get_flag(int flag, char *str_flag){
   int len = 0;
@@ -111,10 +211,11 @@ void read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeade
   for (int i = 0; i < header.e_shnum; i++) {
 
     if(i == num){
+      //Si la section n'as pas de contenu et si elle n'est pas de type : NOBITS
       if(__bswap_32(TabSectionHeader[i].sh_size) != 0 && __bswap_32(TabSectionHeader[i].sh_type) != 0x8){
         printf("\nHex dump of section '%s':\n", TabSectionHeader[i].nameNotid);
 
-        if(i==1){//A regler!
+        if(i==1){ //A regler!
           printf(" NOTE: This section has relocations against it, but these have NOT been applied to this dump.\n");
         }
 
@@ -227,7 +328,6 @@ void print_elf_section_header(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHe
   printf("Key to Flags:\n  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),\n  L (link order), O (extra OS processing required), G (group), T (TLS),\n  C (compressed), x (unknown), o (OS specific), E (exclude),\n  D (mbind), y (purecode), p (processor specific)\n");
 }
 
-
 void print_elf_header(Elf32_Ehdr header) {
 
   //Liste des noms des machines, a completer si on a une machine differente
@@ -338,6 +438,7 @@ int main(int argc, char *argv[]){
     if (!strcmp(argv[1], "-h")) print_elf_header(header);
     else if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
     else if (!strcmp(argv[1], "-x") && argc == 4) read_elf_section_dump(header, TabSectionHeader, buffer, atoi(argv[3]));
+    else if (!strcmp(argv[1], "-s")) read_elf_symbol_table(header, TabSectionHeader, buffer);
     else printf("Erreur nombre d'arguments\n");
     return 0;
 

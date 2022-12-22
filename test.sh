@@ -71,6 +71,20 @@ function line_test(){
   rt=$err
 }
 
+function symbol_table_test(){
+  fichier=$1
+  echo -e $jaune"(Etape 4) : Test de la table de symbole de $(basename $fichier) :"$blanc
+  line_test $fichier $2
+
+  if [[ $rt -eq 0 ]]
+  then
+    echo -e $vertB"Test_symb_tab : $(basename $fichier) REUSSI."$blanc$'\n'
+  elif [[ $rt -ne -1 ]]
+  then
+    echo -e $rougeB"Test_symb_tab : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc$'\n'
+  fi
+}
+
 function section_content_test(){
   fichier=$1
   echo -e $jaune"(Etape 3) : Test du contenu de section de $(basename $fichier) :"$blanc
@@ -84,10 +98,10 @@ function section_content_test(){
 
   if [[ $err_num -eq 0 ]]
   then
-    echo -e $vertB"Test_content_sec : $(basename $fichier) REUSSI."$blanc $'\n'
+    echo -e $vertB"Test_content_sec : $(basename $fichier) REUSSI."$blanc
   elif [[ $err_num -ne -1 ]]
   then
-    echo -e $rougeB"Test_content_sec : $err_num erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc $'\n'
+    echo -e $rougeB"Test_content_sec : $err_num erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
   fi
 }
 
@@ -143,6 +157,8 @@ do
       section_header_test $fich "-S"
       #Test d'affichage du contenu de sections
       section_content_test $fich "-x"
+      #Test d'affichage de la table des symboles
+      symbol_table_test $fich "-s"
     done
   else
     #Test de recuperation du header
@@ -151,6 +167,8 @@ do
     section_header_test $fichier "-S"
     #Test d'affichage du contenu de sections
     section_content_test $fichier "-x"
+    #Test d'affichage de la table des symboles
+    symbol_table_test $fichier "-s"
   fi
 
 done
