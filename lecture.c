@@ -4,25 +4,18 @@
 #include <elf.h>
 #include <byteswap.h>
 #include <ctype.h>
+#include "lecture.h"
 
-typedef struct {
-  Elf32_Word sh_name;
-  Elf32_Word sh_type;
-  Elf32_Word sh_flags;
-  Elf32_Addr sh_addr;
-  Elf32_Off sh_offset;
-  Elf32_Word sh_size;
-  Elf32_Word sh_link;
-  Elf32_Word sh_info;
-  Elf32_Word sh_addralign;
-  Elf32_Word sh_entsize;
-  unsigned char *nameNotid;
-} Elf32_Shdr_notELF;
+
 
 void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeader, unsigned char *buffer) {
   Elf32_Rel *relocSect = NULL;
+  Elf32_Sym *symbolTable = NULL;
+
+  unsigned char *strTab;
   int size=0;
   int offset=0;
+  int aa=0;
   //On cherche la section reloc
   for (int i = 0; i < header.e_shnum; i++) {
     //Si reloc
@@ -32,20 +25,36 @@ void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectio
       offset=__bswap_32(TabSectionHeader[i].sh_offset);
       //Copie de la section reloc
       memcpy(relocSect, &buffer[__bswap_32(TabSectionHeader[i].sh_offset)], __bswap_32(TabSectionHeader[i].sh_size));
-      break;
+    };
+
+    if (__bswap_32(TabSectionHeader[i].sh_type) == SHT_STRTAB && aa == 0){
+      //adresse de la table str
+      strTab = &buffer[__bswap_32(TabSectionHeader[i].sh_offset)];
+      aa =1;
+    };
+
+    //Si table des symboles
+    if (__bswap_32(TabSectionHeader[i].sh_type) == SHT_SYMTAB){
+      //Prendre le nombre d'entrees
+      int size2 = __bswap_32(TabSectionHeader[i].sh_size) / sizeof(Elf32_Sym);
+      symbolTable = malloc(size2 * sizeof(Elf32_Sym));
+      //Copy de la table symboles
+      memcpy(symbolTable, &buffer[__bswap_32(TabSectionHeader[i].sh_addr) +__bswap_32(TabSectionHeader[i].sh_offset)], size2 * sizeof(Elf32_Sym));
     };
   }
 
-  int typeRel[8]={0x91c,0x28,0x111c,0xf02,0xe02,0x141c,0x1502,0x1602};
-  char *typeRelNom[8];
-  typeRelNom[0]="R_ARM_CALL        ";
-  typeRelNom[1]="R_ARM_V4BX        ";
-  typeRelNom[2]="R_ARM_CALL        ";
-  typeRelNom[3]="R_ARM_ABS32       ";
-  typeRelNom[4]="R_ARM_CALL        ";
-  typeRelNom[5]="R_ARM_CALL        ";
-  typeRelNom[6]="R_ARM_ABS32       ";
-  typeRelNom[7]="R_ARM_ABS32       ";
+  int typeRel[10]={0x91c,0x28,0x111c,0xf02,0xe02,0x141c,0x1502,0x1602,0x502,0xc1c};
+  char *typeRelNom[10];
+  typeRelNom[0]="R_ARM_CALL       ";
+  typeRelNom[1]="R_ARM_V4BX       ";
+  typeRelNom[2]="R_ARM_CALL       ";
+  typeRelNom[3]="R_ARM_ABS32      ";
+  typeRelNom[4]="R_ARM_ABS32      ";
+  typeRelNom[5]="R_ARM_CALL       ";
+  typeRelNom[6]="R_ARM_ABS32      ";
+  typeRelNom[7]="R_ARM_ABS32      ";
+  typeRelNom[8]="R_ARM_ABS32      ";
+  typeRelNom[9]="R_ARM_CALL       ";
 
 
   printf("\nRelocation section '.rel.text' at offset 0x%x contains %d entries:\n Offset     Info    Type            Sym.Value  Sym. Name\n",offset,size);
@@ -53,19 +62,26 @@ void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectio
   {
     printf("%8.8x  ",__bswap_32(relocSect[i].r_offset));
     printf("%8.8x ",__bswap_32(relocSect[i].r_info));
-    for (int j = 0; j < 8; j++)
+    for (int j = 0; j < 10; j++)
     {
       if(__bswap_32(relocSect[i].r_info) != typeRel[j])continue;
       printf("%s",typeRelNom[j]);
     }
-    printf("%d\n",__bswap_32(relocSect[i].r_info)>>8);
 
-    
+    int symInd = (__bswap_32(relocSect[i].r_info)>>8);
+    if(symInd == 0){
+      printf("\n");
+      continue;
+    } 
+    printf(" %8.8x   ",__bswap_32(symbolTable[symInd].st_value));
+
+    //Si type est section alors shstrtab sinon strtab
+    if(__bswap_32(symbolTable[symInd].st_name) == 0){
+      printf("%s\n", TabSectionHeader[symInd].nameNotid); // Name
+    }else{
+      printf("%s\n", strTab + __bswap_32(symbolTable[symInd].st_name));// Name
+    }    
   }
-  
-
-
-
 
 }
 
