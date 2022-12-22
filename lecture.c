@@ -19,6 +19,55 @@ typedef struct {
   unsigned char *nameNotid;
 } Elf32_Shdr_notELF;
 
+void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeader, unsigned char *buffer) {
+  Elf32_Rel *relocSect = NULL;
+  int size=0;
+  int offset=0;
+  //On cherche la section reloc
+  for (int i = 0; i < header.e_shnum; i++) {
+    //Si reloc
+    if (__bswap_32(TabSectionHeader[i].sh_type) == SHT_REL){
+      size = __bswap_32(TabSectionHeader[i].sh_size) / sizeof(Elf32_Rel);
+      relocSect = malloc(__bswap_32(TabSectionHeader[i].sh_size));
+      offset=__bswap_32(TabSectionHeader[i].sh_offset);
+      //Copie de la section reloc
+      memcpy(relocSect, &buffer[__bswap_32(TabSectionHeader[i].sh_offset)], __bswap_32(TabSectionHeader[i].sh_size));
+      break;
+    };
+  }
+
+  int typeRel[8]={0x91c,0x28,0x111c,0xf02,0xe02,0x141c,0x1502,0x1602};
+  char *typeRelNom[8];
+  typeRelNom[0]="R_ARM_CALL        ";
+  typeRelNom[1]="R_ARM_V4BX        ";
+  typeRelNom[2]="R_ARM_CALL        ";
+  typeRelNom[3]="R_ARM_ABS32       ";
+  typeRelNom[4]="R_ARM_CALL        ";
+  typeRelNom[5]="R_ARM_CALL        ";
+  typeRelNom[6]="R_ARM_ABS32       ";
+  typeRelNom[7]="R_ARM_ABS32       ";
+
+
+  printf("\nRelocation section '.rel.text' at offset 0x%x contains %d entries:\n Offset     Info    Type            Sym.Value  Sym. Name\n",offset,size);
+  for (int i = 0; i < size; i++)
+  {
+    printf("%8.8x  ",__bswap_32(relocSect[i].r_offset));
+    printf("%8.8x ",__bswap_32(relocSect[i].r_info));
+    for (int j = 0; j < 8; j++)
+    {
+      if(__bswap_32(relocSect[i].r_info) != typeRel[j])continue;
+      printf("%s",typeRelNom[j]);
+    }
+    printf("%d\n",__bswap_32(relocSect[i].r_info)>>8);
+
+    
+  }
+  
+
+
+
+
+}
 
 void read_elf_symbol_table(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeader, unsigned char *buffer) {
   Elf32_Sym *symbolTable = NULL;
@@ -439,6 +488,7 @@ int main(int argc, char *argv[]){
     else if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
     else if (!strcmp(argv[1], "-x") && argc == 4) read_elf_section_dump(header, TabSectionHeader, buffer, atoi(argv[3]));
     else if (!strcmp(argv[1], "-s")) read_elf_symbol_table(header, TabSectionHeader, buffer);
+    else if (!strcmp(argv[1], "-r")) read_elf_relocation_section(header, TabSectionHeader, buffer);
     else printf("Erreur nombre d'arguments\n");
     return 0;
 
