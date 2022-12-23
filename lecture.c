@@ -470,6 +470,53 @@ void print_elf_header(Elf32_Ehdr header) {
   
 }
 
+void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
+
+  fseek(fileElf1, 0, SEEK_END);
+  unsigned long sizeElf1 = ftell(fileElf1);
+  unsigned char elf1[sizeElf1];
+  fseek(fileElf1, 0, SEEK_SET);
+  fread(&elf1, sizeElf1, 1, fileElf1);
+
+  fseek(fileElf2, 0, SEEK_END);
+  unsigned long sizeElf2 = ftell(fileElf2);
+  unsigned char elf2[sizeElf2];
+  fseek(fileElf2, 0, SEEK_SET);
+  fread(&elf2, sizeElf2, 1, fileElf2);
+
+  Elf32_Ehdr headerElf1;
+  memcpy(&headerElf1, &elf1[0], 52);
+
+  Elf32_Ehdr headerElf2;
+  memcpy(&headerElf2, &elf2[0], 52);
+  
+  int sizeSectionsHeadersElf2 = headerElf2.e_shnum * sizeof(Elf32_Shdr);
+  int resultSize = sizeElf1 + sizeElf2 - sizeof(Elf32_Ehdr) - sizeSectionsHeadersElf2;
+
+  unsigned char elfResult[resultSize];
+  memcpy(&elfResult, &headerElf1, 52);
+
+  swap_header(headerElf1);
+  swap_header(headerElf2);
+
+  Elf32_Shdr_notELF* tabSectionHeaderElf1 = NULL;
+  init_TabSectionHeader(headerElf1, tabSectionHeaderElf1, elf1);
+
+  Elf32_Shdr_notELF* tabSectionHeaderElf2 = NULL;
+  init_TabSectionHeader(headerElf1, tabSectionHeaderElf2, elf2);
+
+  for(int i = 0; i < max(headerElf1.e_shnum, headerElf2.e_shnum); i++){
+
+    if(headerElf1.e_shnum > eaderElf2.e_shnum){
+      
+    }
+    else{
+
+    }
+  } 
+
+}
+
 int main(int argc, char *argv[]){
 
   if(argc < 3) printf("Erreur il manque des arguments\n");
