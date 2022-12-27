@@ -496,8 +496,8 @@ void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
   unsigned char elfResult[resultSize];
   memcpy(&elfResult, &headerElf1, 52);
 
-  swap_header(headerElf1);
-  swap_header(headerElf2);
+  swap_header(&headerElf1);
+  swap_header(&headerElf2);
 
   Elf32_Shdr_notELF* tabSectionHeaderElf1 = NULL;
   init_TabSectionHeader(headerElf1, tabSectionHeaderElf1, elf1);
@@ -505,13 +505,36 @@ void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
   Elf32_Shdr_notELF* tabSectionHeaderElf2 = NULL;
   init_TabSectionHeader(headerElf1, tabSectionHeaderElf2, elf2);
 
+
+  //On concatènera le fichier avec le plus de sections au second
+  Elf32_Shdr_notELF* tabSectionHeaderF = NULL;
+  Elf32_Shdr_notELF* tabSectionHeaderS = NULL;
+  unsigned char *elfF = NULL;
+  unsigned char *elfS = NULL; 
+  if(headerElf1.e_shnum > headerElf2.e_shnum){
+      tabSectionHeaderF = tabSectionHeaderElf2;
+      tabSectionHeaderS = tabSectionHeaderElf1;
+      elfF = elf2;
+      elfS = elf1;
+  }
+  else{
+      tabSectionHeaderF = tabSectionHeaderElf1;
+      tabSectionHeaderS = tabSectionHeaderElf2;
+      elfF = elf1;
+      elfS = elf2;
+  }
+
   for(int i = 0; i < max(headerElf1.e_shnum, headerElf2.e_shnum); i++){
 
-    if(headerElf1.e_shnum > eaderElf2.e_shnum){
-      
-    }
-    else{
+    memcpy(&elfResult, &tabSectionHeaderF[i], sizeof(Elf32_Shdr));
+    unsigned int section1Adress = __bswap_32(tabSectionHeaderF[i].sh_adress)+__bswap_32(tabSectionHeaderF[i].sh_offset);
+    memcpy(&elfResult, section1Adress, tabSectionHeaderF[i].sh_size);
 
+    for(int a = 0; a < min(headerElf1.e_shnum, headerElf2.e_shnum); a++){
+      if(tabSectionHeaderF[i].nameNotid == tabSectionHeaderS[a].nameNotid){
+        unsigned int section2Adress = __bswap_32(tabSectionHeaderS[a].sh_adress)+__bswap_32(tabSectionHeaderS[a].sh_offset);
+        memcpy(&elfResult, section2Adress, tabSectionHeaderS[a].sh_size);
+      }
     }
   } 
 
