@@ -103,7 +103,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am__fusion_result_SOURCES_DIST = eabi-none-lib.c
-#am_fusion_result_OBJECTS = eabi-none-lib.$(OBJEXT)
+am_fusion_result_OBJECTS = eabi-none-lib.$(OBJEXT)
 fusion_result_OBJECTS = $(am_fusion_result_OBJECTS)
 fusion_result_DEPENDENCIES = fusion_result.o
 AM_V_P = $(am__v_P_$(V))
@@ -190,15 +190,15 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} "/mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/build-aux/missing" aclocal-1.16
+ACLOCAL = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing aclocal-1.16
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} "/mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/build-aux/missing" autoconf
-AUTOHEADER = ${SHELL} "/mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/build-aux/missing" autoheader
-AUTOMAKE = ${SHELL} "/mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/build-aux/missing" automake-1.16
-AWK = gawk
-CC = arm-linux-gnueabi-gcc
-CCAS = arm-linux-gnueabi-gcc
+AUTOCONF = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing autoconf
+AUTOHEADER = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing autoheader
+AUTOMAKE = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing automake-1.16
+AWK = mawk
+CC = arm-none-eabi-gcc
+CCAS = arm-none-eabi-gcc
 CCASDEPMODE = depmode=gcc3
 CCASFLAGS = -g -O2
 CCDEPMODE = depmode=gcc3
@@ -220,7 +220,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} "/mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/build-aux/missing" makeinfo
+MAKEINFO = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/missing makeinfo
 MKDIR_P = /usr/bin/mkdir -p
 OBJEXT = o
 PACKAGE = arm-examples
@@ -233,14 +233,14 @@ PACKAGE_VERSION = 1.0
 PATH_SEPARATOR = :
 SET_MAKE = 
 SHELL = /bin/bash
-STRIP = arm-linux-gnueabi-strip
+STRIP = arm-none-eabi-strip
 VD_CROSS_NOPIE_CFLAGS = -no-pie
-VD_CROSS_NOSTDLIB_LDFLAGS = 
+VD_CROSS_NOSTDLIB_LDFLAGS = -nostdlib -Wl,--entry=0
 VERSION = 1.0
-abs_builddir = /mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/Examples_fusion
-abs_srcdir = /mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/Examples_fusion
-abs_top_builddir = /mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/Examples_fusion
-abs_top_srcdir = /mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/Examples_fusion
+abs_builddir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+abs_srcdir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+abs_top_builddir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
+abs_top_srcdir = /home/pht20100/App/GitHub/Projet_Prog/Examples_fusion
 ac_ct_CC = 
 am__include = include
 am__leading_dot = .
@@ -255,11 +255,11 @@ datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
 exec_prefix = ${prefix}
-host_alias = arm-linux-gnueabi
+host_alias = arm-none-eabi
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} '/mnt/d/Informatique/Programmation/Projet Visual Studio Code/Projet_Prog/build-aux/install-sh'
+install_sh = ${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -286,8 +286,8 @@ ACLOCAL_AMFLAGS = -I ../m4
 AM_CFLAGS = -no-pie -mno-thumb-interwork
 
 # avec arm-none-eabi-, on a besoin de "puts" pour générer le programme
-#fusion_result_SOURCES = eabi-none-lib.c
-#AM_LDFLAGS = 
+fusion_result_SOURCES = eabi-none-lib.c
+AM_LDFLAGS = -nostdlib -Wl,--entry=0
 
 # il faudra linker avec fusion_result.o
 fusion_result_LDADD = fusion_result.o

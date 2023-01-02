@@ -3,7 +3,6 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CFLAGS=-Wall -Werror -g
 AM_CFLAGS+=-D DEBUG
 AM_CFLAGS+=-D WARNING
-AM_LDFLAGS=-lm
 # Uncomment if performance when running with -DDEBUG is an issue
 # Warning, if uncommented, issuing calls to debug functions during options
 # parsing might result in debug flag incorrectly set to 0 for some files
