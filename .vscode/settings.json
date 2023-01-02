@@ -6,6 +6,11 @@
         "tuple": "c",
         "type_traits": "c",
         "utility": "c",
-        "limits": "c"
+        "limits": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "random": "c",
+        "algorithm": "c",
+        "math.h": "c"
     }
 }

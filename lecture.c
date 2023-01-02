@@ -4,8 +4,17 @@
 #include <elf.h>
 #include <byteswap.h>
 #include <ctype.h>
+
 #include "lecture.h"
 
+
+int max_int(int a, int b){
+  return a > b ? a : b;
+}
+
+int min_int(int a, int b){
+  return a < b ? a : b;
+}
 
 
 void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectionHeader, unsigned char *buffer) {
@@ -490,7 +499,7 @@ void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
   Elf32_Ehdr headerElf2;
   memcpy(&headerElf2, &elf2[0], 52);
   
-  int sizeSectionsHeadersElf2 = headerElf2.e_shnum * sizeof(Elf32_Shdr);
+  int sizeSectionsHeadersElf2 = __bswap_16(headerElf2.e_shnum) * sizeof(Elf32_Shdr);
   int resultSize = sizeElf1 + sizeElf2 - sizeof(Elf32_Ehdr) - sizeSectionsHeadersElf2;
 
   unsigned char elfResult[resultSize];
@@ -499,11 +508,11 @@ void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
   swap_header(&headerElf1);
   swap_header(&headerElf2);
 
-  Elf32_Shdr_notELF* tabSectionHeaderElf1 = NULL;
+  Elf32_Shdr_notELF tabSectionHeaderElf1[headerElf1.e_shnum];
   init_TabSectionHeader(headerElf1, tabSectionHeaderElf1, elf1);
 
-  Elf32_Shdr_notELF* tabSectionHeaderElf2 = NULL;
-  init_TabSectionHeader(headerElf1, tabSectionHeaderElf2, elf2);
+  Elf32_Shdr_notELF tabSectionHeaderElf2[headerElf2.e_shnum];
+  init_TabSectionHeader(headerElf2, tabSectionHeaderElf2, elf2);
 
 
   //On concatènera le fichier avec le plus de sections au second
@@ -524,16 +533,16 @@ void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
       elfS = elf2;
   }
 
-  for(int i = 0; i < max(headerElf1.e_shnum, headerElf2.e_shnum); i++){
+  for(int i = 0; i < max_int(headerElf1.e_shnum, headerElf2.e_shnum); i++){
 
     memcpy(&elfResult, &tabSectionHeaderF[i], sizeof(Elf32_Shdr));
-    unsigned int section1Adress = __bswap_32(tabSectionHeaderF[i].sh_adress)+__bswap_32(tabSectionHeaderF[i].sh_offset);
-    memcpy(&elfResult, section1Adress, tabSectionHeaderF[i].sh_size);
+    unsigned char *section1Adress = elfF + __bswap_32(tabSectionHeaderF[i].sh_offset);
+    memcpy(elfResult, section1Adress, __bswap_32(tabSectionHeaderF[i].sh_size));
 
-    for(int a = 0; a < min(headerElf1.e_shnum, headerElf2.e_shnum); a++){
+    for(int a = 0; a < min_int(headerElf1.e_shnum, headerElf2.e_shnum); a++){
       if(tabSectionHeaderF[i].nameNotid == tabSectionHeaderS[a].nameNotid){
-        unsigned int section2Adress = __bswap_32(tabSectionHeaderS[a].sh_adress)+__bswap_32(tabSectionHeaderS[a].sh_offset);
-        memcpy(&elfResult, section2Adress, tabSectionHeaderS[a].sh_size);
+        unsigned char *section2Adress = elfS + __bswap_32(tabSectionHeaderS[a].sh_offset);
+        memcpy(elfResult, section2Adress, __bswap_32(tabSectionHeaderS[a].sh_size));
       }
     }
   } 
@@ -544,42 +553,53 @@ int main(int argc, char *argv[]){
 
   if(argc < 3) printf("Erreur il manque des arguments\n");
 
-  FILE* file = fopen(argv[2], "rb");
+  if (!strcmp(argv[1], "-f")){
 
-  if(file) {
+    FILE* elf1 = fopen(argv[2], "rb");
+    FILE* elf2 = fopen(argv[3], "rb");
+    FILE* elfResult = fopen(argv[2], "rb");
 
-    // Initialisation du Buffer
-    fseek( file, 0, SEEK_END);
-    unsigned long size = ftell(file);
-    unsigned char buffer[size];
-    fseek(file, 0, SEEK_SET);
-    fread(&buffer, size, 1, file);
-    fclose(file);
+    fusion_elf_files(elf1, elf2, elfResult);
 
-    // Initialisation du Header
-    Elf32_Ehdr header;
-    memcpy(&header, &buffer[0], 52);
-    swap_header(&header);
+  }else{
 
-    if(is32_B_E(header)){
-      printf("ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian\n");
-      return 1;
+    FILE* file = fopen(argv[2], "rb");
+
+    if(file) {
+
+      // Initialisation du Buffer
+      fseek( file, 0, SEEK_END);
+      unsigned long size = ftell(file);
+      unsigned char buffer[size];
+      fseek(file, 0, SEEK_SET);
+      fread(&buffer, size, 1, file);
+      fclose(file);
+
+      // Initialisation du Header
+      Elf32_Ehdr header;
+      memcpy(&header, &buffer[0], 52);
+      swap_header(&header);
+
+      if(is32_B_E(header)){
+        printf("ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian\n");
+        return 1;
+      }
+
+      // Initialisation de la table des sections
+      Elf32_Shdr_notELF TabSectionHeader[header.e_shnum];
+      init_TabSectionHeader(header, TabSectionHeader, buffer);
+
+      if (!strcmp(argv[1], "-h")) print_elf_header(header);
+      else if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
+      else if (!strcmp(argv[1], "-x") && argc == 4) read_elf_section_dump(header, TabSectionHeader, buffer, atoi(argv[3]));
+      else if (!strcmp(argv[1], "-s")) read_elf_symbol_table(header, TabSectionHeader, buffer);
+      else if (!strcmp(argv[1], "-r")) read_elf_relocation_section(header, TabSectionHeader, buffer);
+      else printf("Erreur nombre d'arguments\n");
+      return 0;;
+
     }
 
-    // Initialisation de la table des sections
-    Elf32_Shdr_notELF TabSectionHeader[header.e_shnum];
-    init_TabSectionHeader(header, TabSectionHeader, buffer);
-
-    if (!strcmp(argv[1], "-h")) print_elf_header(header);
-    else if (!strcmp(argv[1], "-S")) print_elf_section_header(header, TabSectionHeader, buffer );
-    else if (!strcmp(argv[1], "-x") && argc == 4) read_elf_section_dump(header, TabSectionHeader, buffer, atoi(argv[3]));
-    else if (!strcmp(argv[1], "-s")) read_elf_symbol_table(header, TabSectionHeader, buffer);
-    else if (!strcmp(argv[1], "-r")) read_elf_relocation_section(header, TabSectionHeader, buffer);
-    else printf("Erreur nombre d'arguments\n");
-    return 0;
-
+    printf("ERR_ELF_FILE : Erreur lecture du fichier\n");
   }
-
-  printf("ERR_ELF_FILE : Erreur lecture du fichier\n");
   return 1;
 }
