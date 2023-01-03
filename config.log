@@ -162,7 +162,7 @@ configure:4728: $? = 0
 configure:4741: result: none needed
 configure:4756: checking for library containing yywrap
 configure:4786: gcc -o conftest -g -O2   conftest.c  >&5
-/usr/bin/ld: /tmp/ccHqXbVZ.o: in function `main':
+/usr/bin/ld: /tmp/ccLXo52O.o: in function `main':
 /home/pht20100/App/GitHub/Projet_Prog/conftest.c:19: undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:4786: $? = 1
@@ -1244,7 +1244,6 @@ on Ubuntu-20100
 config.status:789: creating Makefile
 config.status:961: executing depfiles commands
 config.status:1038: cd .       && sed -e '/# am--include-marker/d' Makefile         | make -f - am--depfiles
-make: Nothing to be done for 'am--depfiles'.
 config.status:1043: $? = 0
 configure:7352: === configuring in Examples_fusion (/home/pht20100/App/GitHub/Projet_Prog/Examples_fusion)
 configure:7415: running /bin/bash ./configure --disable-option-checking '--prefix=/usr/local'  '--host=arm-none-eabi' '--enable-arm-compiler' --cache-file=/dev/null --srcdir=.
