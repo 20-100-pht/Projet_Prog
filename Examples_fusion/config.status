@@ -430,11 +430,11 @@ Copyright (C) 2021 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/pht20100/App/GitHub/Projet_Prog/Examples_fusion'
+ac_pwd='/home/oliver/Documents/GitHub/Projet_Prog/Examples_fusion'
 srcdir='.'
 INSTALL='/usr/bin/install -c'
 MKDIR_P='/usr/bin/mkdir -p'
-AWK='mawk'
+AWK='gawk'
 test -n "$AWK" || AWK=awk
 # The default lists apply if the user does not specify any file.
 ac_need_defaults=:
@@ -650,17 +650,17 @@ S["am__tar"]="$${TAR-tar} chof - \"$$tardir\""
 S["AMTAR"]="$${TAR-tar}"
 S["am__leading_dot"]="."
 S["SET_MAKE"]=""
-S["AWK"]="mawk"
+S["AWK"]="gawk"
 S["mkdir_p"]="$(MKDIR_P)"
 S["MKDIR_P"]="/usr/bin/mkdir -p"
 S["INSTALL_STRIP_PROGRAM"]="$(install_sh) -c -s"
 S["STRIP"]="arm-none-eabi-strip"
-S["install_sh"]="${SHELL} /home/pht20100/App/GitHub/Projet_Prog/build-aux/install-sh"
-S["MAKEINFO"]="${SHELL} '/home/pht20100/App/GitHub/Projet_Prog/build-aux/missing' makeinfo"
-S["AUTOHEADER"]="${SHELL} '/home/pht20100/App/GitHub/Projet_Prog/build-aux/missing' autoheader"
-S["AUTOMAKE"]="${SHELL} '/home/pht20100/App/GitHub/Projet_Prog/build-aux/missing' automake-1.16"
-S["AUTOCONF"]="${SHELL} '/home/pht20100/App/GitHub/Projet_Prog/build-aux/missing' autoconf"
-S["ACLOCAL"]="${SHELL} '/home/pht20100/App/GitHub/Projet_Prog/build-aux/missing' aclocal-1.16"
+S["install_sh"]="${SHELL} /home/oliver/Documents/GitHub/Projet_Prog/build-aux/install-sh"
+S["MAKEINFO"]="${SHELL} '/home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing' makeinfo"
+S["AUTOHEADER"]="${SHELL} '/home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing' autoheader"
+S["AUTOMAKE"]="${SHELL} '/home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing' automake-1.16"
+S["AUTOCONF"]="${SHELL} '/home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing' autoconf"
+S["ACLOCAL"]="${SHELL} '/home/oliver/Documents/GitHub/Projet_Prog/build-aux/missing' aclocal-1.16"
 S["VERSION"]="1.0"
 S["PACKAGE"]="arm-examples"
 S["CYGPATH_W"]="echo"

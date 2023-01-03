@@ -43,29 +43,32 @@ void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectio
     };
   }
 
-  int typeRel[10]={0x91c,0x28,0x111c,0xf02,0xe02,0x141c,0x1502,0x1602,0x502,0xc1c};
-  char *typeRelNom[10];
-  typeRelNom[0]="R_ARM_CALL       ";
-  typeRelNom[1]="R_ARM_V4BX       ";
-  typeRelNom[2]="R_ARM_CALL       ";
-  typeRelNom[3]="R_ARM_ABS32      ";
-  typeRelNom[4]="R_ARM_ABS32      ";
-  typeRelNom[5]="R_ARM_CALL       ";
-  typeRelNom[6]="R_ARM_ABS32      ";
-  typeRelNom[7]="R_ARM_ABS32      ";
-  typeRelNom[8]="R_ARM_ABS32      ";
-  typeRelNom[9]="R_ARM_CALL       ";
-
-
-  printf("\nRelocation section '.rel.text' at offset 0x%x contains %d entries:\n Offset     Info    Type            Sym.Value  Sym. Name\n",offset,size);
+  char *numEnt;
+  if(size == 1){
+    numEnt="entry";
+  }else{
+    numEnt="entries";
+  }
+  
+  printf("\nRelocation section '.rel.text' at offset 0x%x contains %d %s:\n Offset     Info    Type            Sym.Value  Sym. Name\n",offset,size,numEnt);
   for (int i = 0; i < size; i++)
   {
     printf("%8.8x  ",__bswap_32(relocSect[i].r_offset));
     printf("%8.8x ",__bswap_32(relocSect[i].r_info));
-    for (int j = 0; j < 10; j++)
+    
+    switch (ELF32_R_TYPE(__bswap_32(relocSect[i].r_info)))
     {
-      if(__bswap_32(relocSect[i].r_info) != typeRel[j])continue;
-      printf("%s",typeRelNom[j]);
+    case R_ARM_CALL:
+      printf("R_ARM_CALL       ");
+      break;
+    case R_ARM_ABS32:
+      printf("R_ARM_ABS32      ");
+      break;
+    case R_ARM_V4BX:
+      printf("R_ARM_V4BX       ");
+      break;
+    default:
+      break;
     }
 
     int symInd = (__bswap_32(relocSect[i].r_info)>>8);
