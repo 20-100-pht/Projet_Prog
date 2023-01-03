@@ -81,7 +81,7 @@ function section_reloc_test(){
     echo -e $vertB"Test_symb_tab : $(basename $fichier) REUSSI."$blanc$'\n'
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_symb_tab : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc$'\n'
+    echo -e $rougeB"Test_symb_tab : $rt erreurs trouvées dans $(basename $fichier), ECHEC"$blanc$'\n'
   fi
 }
 
@@ -95,7 +95,7 @@ function symbol_table_test(){
     echo -e $vertB"Test_symb_tab : $(basename $fichier) REUSSI."$blanc
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_symb_tab : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
+    echo -e $rougeB"Test_symb_tab : $rt erreurs trouvées dans $(basename $fichier), ECHEC"$blanc
   fi
 }
 
@@ -115,7 +115,7 @@ function section_content_test(){
     echo -e $vertB"Test_content_sec : $(basename $fichier) REUSSI."$blanc
   elif [[ $err_num -ne -1 ]]
   then
-    echo -e $rougeB"Test_content_sec : $err_num erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
+    echo -e $rougeB"Test_content_sec : $err_num erreurs trouvées dans $(basename $fichier), ECHEC"$blanc
   fi
 }
 
@@ -129,7 +129,7 @@ function header_test(){
     echo -e $vertB"Test_header : $(basename $fichier) REUSSI."$blanc
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_header : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
+    echo -e $rougeB"Test_header : $rt erreurs trouvées dans $(basename $fichier), ECHEC"$blanc
   fi
 }
 
@@ -143,7 +143,7 @@ function section_header_test(){
     echo -e $vertB"Test_section_header : $(basename $fichier) REUSSI."$blanc
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_section_header : $rt erreurs trouvées dans $(basename $fichier), ECHEQUE"$blanc
+    echo -e $rougeB"Test_section_header : $rt erreurs trouvées dans $(basename $fichier), ECHEC"$blanc
   fi
 }
 
