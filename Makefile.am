@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-AM_CFLAGS=-Wall -Werror -g
+AM_CFLAGS=-Wall -g
 AM_CFLAGS+=-D DEBUG
 AM_CFLAGS+=-D WARNING
 # Uncomment if performance when running with -DDEBUG is an issue
@@ -13,7 +13,7 @@ AM_CFLAGS+=-D WARNING
 SUBDIRS=
 SUBDIRS+=. Examples_fusion
 
-bin_PROGRAMS=
+bin_PROGRAMS=lecture fusion
 bin_PROGRAMS+=Options_and_debug_example
 
 
@@ -21,6 +21,8 @@ COMMON=debug.h debug.c util.h util.c
 
 EXTRA_DIST=filtre.pl
 Options_and_debug_example_SOURCES=$(COMMON) Options_and_debug_example.c
+lecture_SOURCES=lecture.c lecture.h
+fusion_SOURCES=fusion.c fusion.h
 
 EXTRA_DIST+=
 

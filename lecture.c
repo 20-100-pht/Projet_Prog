@@ -4,12 +4,15 @@
 #include <elf.h>
 #include <byteswap.h>
 #include <ctype.h>
+#include <stdbool.h>
+
 #include "lecture.h"
 
-int flag = 0;
+
+static int isBigEndian = 0;
 
 int swap32(int val){
-  if(flag){
+  if(isBigEndian){
     return __bswap_32(val);
   }else{
     return val;
@@ -17,7 +20,7 @@ int swap32(int val){
 }
 
 int swap16(int val){
-  if(flag){
+  if(isBigEndian){
     return __bswap_16(val);
   }else{
     return val;
@@ -277,10 +280,10 @@ void get_flag(int flag, char *str_flag){
 int is32_B_E(Elf32_Ehdr header){
   if(header.e_ident[4] == 1 && header.e_ident[5] == 2 && memcmp(header.e_ident, ELFMAG, SELFMAG) == 0){
     //Fichier bon
-    flag = 1;
+    isBigEndian = 1;
     return 0;
   }
-  flag = 0;
+  isBigEndian = 0;
   return 1;
 }
 
@@ -526,18 +529,17 @@ void print_elf_header(Elf32_Ehdr header) {
 }
 
 void fusion_elf_files(FILE *fileElf1, FILE *fileElf2, FILE *fileElfResult){
-  int brhh;
   fseek(fileElf1, 0, SEEK_END);
   unsigned long sizeElf1 = ftell(fileElf1);
   unsigned char elf1[sizeElf1];
   fseek(fileElf1, 0, SEEK_SET);
-  brhh = fread(&elf1, sizeElf1, 1, fileElf1);
+  fread(&elf1, sizeElf1, 1, fileElf1);
 
   fseek(fileElf2, 0, SEEK_END);
   unsigned long sizeElf2 = ftell(fileElf2);
   unsigned char elf2[sizeElf2];
   fseek(fileElf2, 0, SEEK_SET);
-  brhh = fread(&elf2, sizeElf2, 1, fileElf2);
+  fread(&elf2, sizeElf2, 1, fileElf2);
 
   Elf32_Ehdr headerElf1;
   memcpy(&headerElf1, &elf1[0], 52);
