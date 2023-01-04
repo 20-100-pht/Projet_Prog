@@ -5,6 +5,9 @@
 #include <byteswap.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "lecture.h"
 
@@ -542,22 +545,22 @@ Elf *read_elf(unsigned char *buffer){
       swap_header(header);
 
       // Table des headers des sections
-      Elf32_SHeaders tabSectionHeader = malloc(header->e_shnum * sizeof(Elf32_Shdr_notELF));
-      read_section_headers(header, tabSectionHeader, buffer);
-      swap_sections(tabSectionHeader, header);
+      Elf32_SHeaders sectionsHeaders = malloc(header->e_shnum * sizeof(Elf32_Shdr_notELF));
+      read_section_headers(header, sectionsHeaders, buffer);
+      swap_sections(sectionsHeaders, header);
 
       // Table des symboles et des strings
       Elf32_Sym *symbolTable = malloc(sizeof(Elf32_Sym));
       unsigned char **strTab = NULL;
       strTab = malloc(sizeof(unsigned char *));
-      read_elf_symbol_table(header, tabSectionHeader, buffer, symbolTable, strTab);
+      read_elf_symbol_table(header, sectionsHeaders, buffer, symbolTable, strTab);
 
       // Table des dumps des sections
-      Elf32_Sdumps sectionDumps = read_elf_section_dump(header, tabSectionHeader, buffer);
+      Elf32_Sdumps sectionDumps = read_elf_section_dump(header, sectionsHeaders, buffer);
 
       Elf *elf = malloc(sizeof(Elf));
       elf->header = header;
-      elf->secHeaders = tabSectionHeader;
+      elf->secHeaders = sectionsHeaders;
       elf->symbolTable = symbolTable;
       elf->strTable = strTab;
       elf->secDumps = sectionDumps;
@@ -565,23 +568,20 @@ Elf *read_elf(unsigned char *buffer){
       return elf;
 }
 
-
 int main(int argc, char *argv[]){
 
   if(argc < 3){
     printf("Erreur il manque des arguments\n");
     return EXIT_FAILURE;
   }
-
     FILE* file = fopen(argv[2], "rb");
     if(file) {
 
       // Initialisation du Buffer
-      fseek( file, 0, SEEK_END);
-      unsigned long size = ftell(file);
-      unsigned char buffer[size];
-      fseek(file, 0, SEEK_SET);
-      fread(&buffer, size, 1, file);
+      struct stat fileInfo;
+      stat(argv[2], &fileInfo);
+      unsigned char buffer[fileInfo.st_size];
+      fread(&buffer, fileInfo.st_size, 1, file);
       fclose(file);
 
       Elf *elf = read_elf(buffer);

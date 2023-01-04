@@ -24,3 +24,5 @@ typedef struct {
   Elf32_Sym *symbolTable;
   unsigned char **strTable;
 } Elf;
+
+Elf *read_elf(unsigned char *buffer);
