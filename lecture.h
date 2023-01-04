@@ -22,7 +22,8 @@ typedef struct {
   Elf32_Sdumps secDumps;
   Elf32_SHeaders secHeaders;
   Elf32_Sym *symbolTable;
-  unsigned char **strTable;
+  unsigned char *strTab;
+  int nbSym;
 } Elf;
 
 Elf *read_elf(unsigned char *buffer);
