@@ -14,6 +14,12 @@ typedef struct {
   unsigned char *nameNotid;
 } Elf32_Shdr_notELF;
 
+typedef struct {
+  Elf32_Rel *Sect;
+  int nb;
+  int offset;
+} Relocation;
+
 typedef unsigned char** Elf32_Sdumps;
 typedef Elf32_Shdr_notELF* Elf32_SHeaders;
 
@@ -21,9 +27,10 @@ typedef struct {
   Elf32_Ehdr *header;
   Elf32_Sdumps secDumps;
   Elf32_SHeaders secHeaders;
-  Elf32_Sym *symbolTable;
+  Elf32_Sym *symbolTab;
   unsigned char *strTab;
   int nbSym;
+  Relocation Reloc;
 } Elf;
 
 Elf *read_elf(unsigned char *buffer);

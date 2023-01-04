@@ -253,3 +253,71 @@ void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *TabSectio
   }
 
 }
+
+
+
+
+//////////////////////////////////////////////
+
+
+void read_elf_relocation_section(unsigned char *buffer, Elf *elf) {
+
+  //On cherche la section relocation
+  for (int i = 0; i < elf->header->e_shnum; i++) {
+    //Si relocation
+    if (elf->tabSectionHeader[i].sh_type == SHT_REL){
+      elf->Reloc->nbReloc = elf->tabSectionHeader[i].sh_size / sizeof(Elf32_Rel);
+      elf->relocSect = malloc(elf->tabSectionHeader[i].sh_size);
+      elf->Reloc->offset = elf->tabSectionHeader[i].sh_offset;
+      //Copie de la section reloc
+      memcpy(elf->relocSect, &buffer[elf->tabSectionHeader[i].sh_offset], elf->tabSectionHeader[i].sh_size);
+    }
+  }
+}
+
+void print_elf_relocation_section(unsigned char *buffer, Elf *elf) {
+
+  char *numEnt;
+  if(elf->Reloc->nb == 1){
+    numEnt="entry";
+  }else{
+    numEnt="entries";
+  }
+  
+  printf("\nRelocation section '.rel.text' at offset 0x%x contains %d %s:\n Offset     Info    Type            Sym.Value  Sym. Name\n",elf->Reloc->offset, elf->Reloc->nb, numEnt);
+  for (int i = 0; i < elf->Reloc->nb; i++)
+  {
+    printf("%8.8x  ",__bswap_32(elf->Reloc->Sect[i].r_offset));
+    printf("%8.8x ",__bswap_32(elf->Reloc->Sect[i].r_info));
+    
+    switch (ELF32_R_TYPE(__bswap_32(elf->Reloc->Sect[i].r_info)))
+    {
+    case R_ARM_CALL:
+      printf("R_ARM_CALL       ");
+      break;
+    case R_ARM_ABS32:
+      printf("R_ARM_ABS32      ");
+      break;
+    case R_ARM_V4BX:
+      printf("R_ARM_V4BX       ");
+      break;
+    default:
+      break;
+    }
+
+    int symInd = (__bswap_32(elf->Reloc->Sect[i].r_info)>>8);
+    if(symInd == 0){
+      printf("\n");
+      continue;
+    } 
+    printf(" %8.8x   ",__bswap_32(elf->symbolTab[symInd].st_value));
+
+    //Si type est section alors shstrtab sinon strtab
+    if(__bswap_32(elf->symbolTab[symInd].st_name) == 0){
+      printf("%s\n", elf->secHeaders[symInd].nameNotid); // Name
+    }else{
+      printf("%s\n", elf->strTab + __bswap_32(elf->symbolTab[symInd].st_name));// Name
+    }    
+  }
+
+}
