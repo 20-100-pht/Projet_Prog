@@ -12,7 +12,7 @@ debug=1
 nb_section=0
 
 #Compilation
-gcc -g lecture.c -o lecture
+#gcc -g lecture.c -o lecture
 clear
 
 function line_test(){
@@ -31,7 +31,6 @@ function line_test(){
   #Test si le fichier est un fichier ELF
   if [[ $sortieA =~ "ERR_ELF_FILE" ]] || ! [[ -f $fichier ]]
   then
-    echo -e $rouge"ERR_ELF_FILE : Le fichier $fichier n'est pas un fichier ELF 32bits big endian."$blanc$'\n'
     rt=-1
     return
   fi
@@ -72,6 +71,11 @@ function line_test(){
 }
 
 function section_reloc_test(){
+  if [[ $rt -eq -1 ]]
+  then
+    return
+  fi
+
   fichier=$1
   echo -e $jaune"(Etape 5) : Test de la section de relocation de $(basename $fichier) :"$blanc
   line_test $fichier $2
@@ -86,6 +90,11 @@ function section_reloc_test(){
 }
 
 function symbol_table_test(){
+  if [[ $rt -eq -1 ]]
+  then
+    return
+  fi
+
   fichier=$1
   echo -e $jaune"(Etape 4) : Test de la table de symbole de $(basename $fichier) :"$blanc
   line_test $fichier $2
@@ -100,6 +109,11 @@ function symbol_table_test(){
 }
 
 function section_content_test(){
+  if [[ $rt -eq -1 ]]
+  then
+    return
+  fi
+
   fichier=$1
   echo -e $jaune"(Etape 3) : Test du contenu de section de $(basename $fichier) :"$blanc
   
@@ -121,8 +135,14 @@ function section_content_test(){
 
 function header_test(){
   fichier=$1
-  echo -e $jaune"(Etape 1) : Test du header de $(basename $fichier) :"$blanc
   line_test $fichier $2
+
+  if [[ $rt -eq -1 ]]
+  then
+    echo -e $rouge"ERR_ELF_FILE : Le fichier $blanc$fichier$rouge n'est pas un fichier ELF 32bits big endian."$blanc$'\n'
+  else
+    echo -e $jaune"(Etape 1) : Test du header de $(basename $fichier) :"$blanc
+  fi
 
   if [[ $rt -eq 0 ]]
   then
@@ -134,6 +154,11 @@ function header_test(){
 }
 
 function section_header_test(){
+  if [[ $rt -eq -1 ]]
+  then
+    return
+  fi
+
   fichier=$1
   echo -e $jaune"(Etape 2) : Test du section header de $(basename $fichier) :"$blanc
   line_test $fichier $2
