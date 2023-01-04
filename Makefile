@@ -244,7 +244,7 @@ AUTOMAKE = ${SHELL} '/home/pht20100/App/GitHub/Projet_Prog/build-aux/missing' au
 AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = 
 CPPFLAGS = 
 CSCOPE = cscope
 CTAGS = ctags

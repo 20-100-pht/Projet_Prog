@@ -14,11 +14,12 @@ typedef struct {
   unsigned char *nameNotid;
 } Elf32_Shdr_notELF;
 
-/*typedef struct {
-  Elf32_Word st_name;
-  Elf32_Addr st_value;
-  Elf32_Word st_size;
-  unsigned char st_info;
-  unsigned char st_other;
-  Elf32_Half st_shndx;
-} Elf32_Sym;*/
+typedef char** Elf32_Sdumps;
+typedef char** Elf32_SHeaders;
+
+typedef struct {
+  Elf32_Ehdr *header;
+  Elf32_Sdumps secDumps;
+  Elf32_SHeaders secHeaders;
+  Elf32_Sym *symbolTable;
+} Elf;
