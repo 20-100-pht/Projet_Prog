@@ -6,7 +6,23 @@
 #include <ctype.h>
 #include "lecture.h"
 
+int flag = 0;
 
+int swap32(int val){
+  if(flag){
+    return __bswap_32(val);
+  }else{
+    return val;
+  }
+}
+
+int swap16(int val){
+  if(flag){
+    return __bswap_16(val);
+  }else{
+    return val;
+  }
+}
 
 void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectionHeader, unsigned char *buffer) {
   Elf32_Rel *relocSect = NULL;
@@ -19,27 +35,27 @@ void read_elf_relocation_section(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectio
   //On cherche la section reloc
   for (int i = 0; i < header.e_shnum; i++) {
     //Si reloc
-    if (__bswap_32(tabSectionHeader[i].sh_type) == SHT_REL){
-      size = __bswap_32(tabSectionHeader[i].sh_size) / sizeof(Elf32_Rel);
-      relocSect = malloc(__bswap_32(tabSectionHeader[i].sh_size));
-      offset=__bswap_32(tabSectionHeader[i].sh_offset);
+    if (tabSectionHeader[i].sh_type == SHT_REL){
+      size = tabSectionHeader[i].sh_size / sizeof(Elf32_Rel);
+      relocSect = malloc(tabSectionHeader[i].sh_size);
+      offset=tabSectionHeader[i].sh_offset;
       //Copie de la section reloc
-      memcpy(relocSect, &buffer[__bswap_32(tabSectionHeader[i].sh_offset)], __bswap_32(tabSectionHeader[i].sh_size));
+      memcpy(relocSect, &buffer[tabSectionHeader[i].sh_offset], tabSectionHeader[i].sh_size);
     };
 
-    if (__bswap_32(tabSectionHeader[i].sh_type) == SHT_STRTAB && aa == 0){
+    if (tabSectionHeader[i].sh_type == SHT_STRTAB && aa == 0){
       //adresse de la table str
-      strTab = &buffer[__bswap_32(tabSectionHeader[i].sh_offset)];
+      strTab = &buffer[tabSectionHeader[i].sh_offset];
       aa =1;
     };
 
     //Si table des symboles
-    if (__bswap_32(tabSectionHeader[i].sh_type) == SHT_SYMTAB){
+    if (tabSectionHeader[i].sh_type == SHT_SYMTAB){
       //Prendre le nombre d'entrees
-      int size2 = __bswap_32(tabSectionHeader[i].sh_size) / sizeof(Elf32_Sym);
+      int size2 = tabSectionHeader[i].sh_size / sizeof(Elf32_Sym);
       symbolTable = malloc(size2 * sizeof(Elf32_Sym));
       //Copy de la table symboles
-      memcpy(symbolTable, &buffer[__bswap_32(tabSectionHeader[i].sh_addr) +__bswap_32(tabSectionHeader[i].sh_offset)], size2 * sizeof(Elf32_Sym));
+      memcpy(symbolTable, &buffer[tabSectionHeader[i].sh_addr +tabSectionHeader[i].sh_offset], size2 * sizeof(Elf32_Sym));
     };
   }
 
@@ -139,8 +155,8 @@ void print_elf_symbol_table(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectionHead
 
     int size = 0;
     for (int s = 0; s < header.e_shnum; s++) {
-        if (__bswap_32(tabSectionHeader[s].sh_type) == SHT_SYMTAB) {
-            size = __bswap_32(tabSectionHeader[s].sh_size) / sizeof(Elf32_Sym);
+        if (tabSectionHeader[s].sh_type == SHT_SYMTAB) {
+            size = tabSectionHeader[s].sh_size / sizeof(Elf32_Sym);
         }
     }
 
@@ -179,18 +195,18 @@ void read_elf_symbol_table(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectionHeade
   for (int i = 0; i < header.e_shnum; i++) {
 
     //Si table des symboles
-    if (__bswap_32(tabSectionHeader[i].sh_type) == SHT_SYMTAB){
+    if (tabSectionHeader[i].sh_type == SHT_SYMTAB){
       //Prendre le nombre d'entrees
-      size = __bswap_32(tabSectionHeader[i].sh_size) / sizeof(Elf32_Sym);
+      size = tabSectionHeader[i].sh_size / sizeof(Elf32_Sym);
       symbolTable = malloc(size * sizeof(Elf32_Sym));
       //Copy de la table symboles
-      memcpy(symbolTable, &buffer[__bswap_32(tabSectionHeader[i].sh_offset)], size * sizeof(Elf32_Sym));
+      memcpy(symbolTable, &buffer[tabSectionHeader[i].sh_offset], size * sizeof(Elf32_Sym));
     };
 
     // Si table des str
-    if (__bswap_32(tabSectionHeader[i].sh_type) == SHT_STRTAB){
+    if (tabSectionHeader[i].sh_type == SHT_STRTAB){
       //adresse de la table str
-      *strTab = &buffer[__bswap_32(tabSectionHeader[i].sh_offset)];
+      *strTab = &buffer[tabSectionHeader[i].sh_offset];
       break;
     };
   }
@@ -261,25 +277,43 @@ void get_flag(int flag, char *str_flag){
 int is32_B_E(Elf32_Ehdr header){
   if(header.e_ident[4] == 1 && header.e_ident[5] == 2 && memcmp(header.e_ident, ELFMAG, SELFMAG) == 0){
     //Fichier bon
+    flag = 1;
     return 0;
   }
+  flag = 0;
   return 1;
 }
 
 void swap_header(Elf32_Ehdr *header){
-  header->e_version = __bswap_32(header->e_version);
-  header->e_entry = __bswap_32(header->e_entry);
-  header->e_phoff = __bswap_32(header->e_phoff);
-  header->e_machine = __bswap_16(header->e_machine);
-  header->e_type = __bswap_16(header->e_type);
-  header->e_shoff = __bswap_32(header->e_shoff);
-  header->e_flags = __bswap_32(header->e_flags);
-  header->e_ehsize = __bswap_16(header->e_ehsize);
-  header->e_phentsize = __bswap_16(header->e_phentsize);
-  header->e_phnum = __bswap_16(header->e_phnum);
-  header->e_shentsize = __bswap_16(header->e_shentsize);
-  header->e_shnum = __bswap_16(header->e_shnum);
-  header->e_shstrndx = __bswap_16(header->e_shstrndx);
+  header->e_version = swap32(header->e_version);
+  header->e_entry = swap32(header->e_entry);
+  header->e_phoff = swap32(header->e_phoff);
+  header->e_machine = swap16(header->e_machine);
+  header->e_type = swap16(header->e_type);
+  header->e_shoff = swap32(header->e_shoff);
+  header->e_flags = swap32(header->e_flags);
+  header->e_ehsize = swap16(header->e_ehsize);
+  header->e_phentsize = swap16(header->e_phentsize);
+  header->e_phnum = swap16(header->e_phnum);
+  header->e_shentsize = swap16(header->e_shentsize);
+  header->e_shnum = swap16(header->e_shnum);
+  header->e_shstrndx = swap16(header->e_shstrndx);
+}
+
+void swap_section(Elf32_Shdr_notELF *TabSectionHeader, Elf32_Ehdr header){
+  for (int ind = 0; ind < header.e_shnum; ind++)
+  {
+    TabSectionHeader[ind].sh_name = swap32(TabSectionHeader[ind].sh_name);
+    TabSectionHeader[ind].sh_type = swap32(TabSectionHeader[ind].sh_type);
+    TabSectionHeader[ind].sh_flags = swap32(TabSectionHeader[ind].sh_flags);
+    TabSectionHeader[ind].sh_addr = swap32(TabSectionHeader[ind].sh_addr);
+    TabSectionHeader[ind].sh_offset = swap32(TabSectionHeader[ind].sh_offset);
+    TabSectionHeader[ind].sh_size = swap32(TabSectionHeader[ind].sh_size);
+    TabSectionHeader[ind].sh_link = swap32(TabSectionHeader[ind].sh_link);
+    TabSectionHeader[ind].sh_info = swap32(TabSectionHeader[ind].sh_info);
+    TabSectionHeader[ind].sh_addralign = swap32(TabSectionHeader[ind].sh_addralign);
+    TabSectionHeader[ind].sh_entsize = swap32(TabSectionHeader[ind].sh_entsize);
+  }
 }
 
 Elf32_Sdumps read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectionHeader, unsigned char *buffer, int num) {
@@ -287,9 +321,9 @@ Elf32_Sdumps read_elf_section_dump(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSect
   Elf32_Sdumps sectionDumps = malloc(header.e_shnum*sizeof(char *));
   for (int i = 0; i < header.e_shnum; i++) {
 
-    char *sectionDump = malloc(__bswap_32(tabSectionHeader[i].sh_size));
+    char *sectionDump = malloc(tabSectionHeader[i].sh_size);
     sectionDumps[i] = sectionDump;
-    memcpy(sectionDump, buffer + __bswap_32(tabSectionHeader[i].sh_offset), __bswap_32(tabSectionHeader[i].sh_size));
+    memcpy(sectionDump, buffer + tabSectionHeader[i].sh_offset, tabSectionHeader[i].sh_size);
   }
 
   return sectionDumps;
@@ -299,7 +333,7 @@ void print_elf_section_dump(Elf32_Shdr_notELF *tabSectionHeader, Elf32_Sdumps du
 
   //Si la section n'as pas de contenu et si elle n'est pas de type : NOBITS
       int flag = 0;
-      if(__bswap_32(tabSectionHeader[num].sh_size) != 0 && __bswap_32(tabSectionHeader[num].sh_type) != 0x8){
+      if(tabSectionHeader[num].sh_size != 0 && tabSectionHeader[num].sh_type != 0x8){
         printf("\nHex dump of section '%s':\n", tabSectionHeader[num].nameNotid);
 
         if(num==1){ //A regler!
@@ -310,7 +344,7 @@ void print_elf_section_dump(Elf32_Shdr_notELF *tabSectionHeader, Elf32_Sdumps du
         inAscii[16]='\0';
         int affiche=0;
         unsigned char *section_data = dumps[num];
-        int max=__bswap_32(tabSectionHeader[num].sh_size);
+        int max=tabSectionHeader[num].sh_size;
         for (int j = 0; j < max; j++)
         {
           if(j%16==0){
@@ -364,7 +398,7 @@ void init_tabSectionHeader(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectionHeade
 void print_elf_section_header(Elf32_Ehdr header, Elf32_Shdr_notELF *tabSectionHeader, unsigned char *buffer) {
 
   int typeSection[17]={0,1,2,3,4,5,6,7,8,9,10,11,0x70000000,0x7fffffff,0x80000000,0xffffffff,0x70000003};
-  char *typeSectionNom[16];
+  char *typeSectionNom[17];
   typeSectionNom[0]="NULL            ";
   typeSectionNom[1]="PROGBITS        ";
   typeSectionNom[2]="SYMTAB          ";
@@ -593,16 +627,19 @@ int main(int argc, char *argv[]){
       // Initialisation du Header
       Elf32_Ehdr header;
       memcpy(&header, &buffer[0], 52);
-      swap_header(&header);
 
       if(is32_B_E(header)){
         printf("ERR_ELF_FILE : Le fichier n'est pas un fichier ELF 32bits big endian\n");
         return 1;
       }
 
+      swap_header(&header);
+
       // Initialisation de la table des sections
       Elf32_Shdr_notELF tabSectionHeader[header.e_shnum];
       init_tabSectionHeader(header, tabSectionHeader, buffer);
+      swap_section(tabSectionHeader,header);
+
 
       // Initialisation table des symbol et str
       Elf32_Sym symbolTable;
