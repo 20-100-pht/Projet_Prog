@@ -530,10 +530,11 @@ void print_elf_relocation_section(Elf32_Ehdr *header, Elf32_Shdr_notELF *secHead
 
     //Si type est section alors shstrtab sinon strtab
     if(symbolTab[symInd].st_name == 0){
-      printf("%s\n", secHeaders[symInd].nameNotid); // Name
+      printf("%s\n", secHeaders[symbolTab[symInd].st_shndx].nameNotid); // Name
     }else{
       printf("%s\n", strTab + symbolTab[symInd].st_name);// Name
-    }    
+      
+    }
   }
 
 }
