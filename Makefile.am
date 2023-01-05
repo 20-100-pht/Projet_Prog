@@ -13,7 +13,7 @@ AM_CFLAGS+=-D WARNING
 SUBDIRS=
 SUBDIRS+=. Examples_fusion
 
-bin_PROGRAMS=lecture fusion
+bin_PROGRAMS=main
 bin_PROGRAMS+=Options_and_debug_example
 
 
@@ -21,8 +21,7 @@ COMMON=debug.h debug.c util.h util.c
 
 EXTRA_DIST=filtre.pl
 Options_and_debug_example_SOURCES=$(COMMON) Options_and_debug_example.c
-lecture_SOURCES=lecture.c lecture.h
-fusion_SOURCES=fusion.c fusion.h
+main_SOURCES=main.c lecture.c lecture.h fusion.c fusion.h
 
 EXTRA_DIST+=
 

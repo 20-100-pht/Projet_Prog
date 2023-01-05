@@ -162,7 +162,7 @@ configure:4728: $? = 0
 configure:4741: result: none needed
 configure:4756: checking for library containing yywrap
 configure:4786: gcc -o conftest    conftest.c  >&5
-/usr/bin/ld: /tmp/ccVvZ1Cs.o: in function `main':
+/usr/bin/ld: /tmp/ccxlY9i9.o: in function `main':
 conftest.c:(.text+0xe): undefined reference to `yywrap'
 collect2: error: ld returned 1 exit status
 configure:4786: $? = 1

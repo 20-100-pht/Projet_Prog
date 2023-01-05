@@ -88,7 +88,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = x86_64-pc-linux-gnu
 host_triplet = x86_64-pc-linux-gnu
-bin_PROGRAMS = Options_and_debug_example$(EXEEXT)
+bin_PROGRAMS = main$(EXEEXT) Options_and_debug_example$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/hostsubdir.m4 \
@@ -110,6 +110,9 @@ am_Options_and_debug_example_OBJECTS = $(am__objects_1) \
 Options_and_debug_example_OBJECTS =  \
 	$(am_Options_and_debug_example_OBJECTS)
 Options_and_debug_example_LDADD = $(LDADD)
+am_main_OBJECTS = main.$(OBJEXT) lecture.$(OBJEXT) fusion.$(OBJEXT)
+main_OBJECTS = $(am_main_OBJECTS)
+main_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -126,7 +129,8 @@ DEFAULT_INCLUDES = -I.
 depcomp = $(SHELL) $(top_srcdir)/build-aux/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/Options_and_debug_example.Po \
-	./$(DEPDIR)/debug.Po ./$(DEPDIR)/util.Po
+	./$(DEPDIR)/debug.Po ./$(DEPDIR)/fusion.Po \
+	./$(DEPDIR)/lecture.Po ./$(DEPDIR)/main.Po ./$(DEPDIR)/util.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -140,8 +144,8 @@ AM_V_CCLD = $(am__v_CCLD_$(V))
 am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(Options_and_debug_example_SOURCES)
-DIST_SOURCES = $(Options_and_debug_example_SOURCES)
+SOURCES = $(Options_and_debug_example_SOURCES) $(main_SOURCES)
+DIST_SOURCES = $(Options_and_debug_example_SOURCES) $(main_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -337,7 +341,7 @@ top_build_prefix =
 top_builddir = .
 top_srcdir = .
 ACLOCAL_AMFLAGS = -I m4
-AM_CFLAGS = -Wall -Werror -g -D DEBUG -D WARNING
+AM_CFLAGS = -Wall -g -D DEBUG -D WARNING
 # Uncomment if performance when running with -DDEBUG is an issue
 # Warning, if uncommented, issuing calls to debug functions during options
 # parsing might result in debug flag incorrectly set to 0 for some files
@@ -346,6 +350,7 @@ SUBDIRS = . Examples_fusion
 COMMON = debug.h debug.c util.h util.c
 EXTRA_DIST = filtre.pl
 Options_and_debug_example_SOURCES = $(COMMON) Options_and_debug_example.c
+main_SOURCES = main.c lecture.c lecture.h fusion.c fusion.h
 all: all-recursive
 
 .SUFFIXES:
@@ -430,6 +435,10 @@ Options_and_debug_example$(EXEEXT): $(Options_and_debug_example_OBJECTS) $(Optio
 	@rm -f Options_and_debug_example$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(Options_and_debug_example_OBJECTS) $(Options_and_debug_example_LDADD) $(LIBS)
 
+main$(EXEEXT): $(main_OBJECTS) $(main_DEPENDENCIES) $(EXTRA_main_DEPENDENCIES) 
+	@rm -f main$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(main_OBJECTS) $(main_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -438,6 +447,9 @@ distclean-compile:
 
 include ./$(DEPDIR)/Options_and_debug_example.Po # am--include-marker
 include ./$(DEPDIR)/debug.Po # am--include-marker
+include ./$(DEPDIR)/fusion.Po # am--include-marker
+include ./$(DEPDIR)/lecture.Po # am--include-marker
+include ./$(DEPDIR)/main.Po # am--include-marker
 include ./$(DEPDIR)/util.Po # am--include-marker
 
 $(am__depfiles_remade):
@@ -808,6 +820,9 @@ distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 		-rm -f ./$(DEPDIR)/Options_and_debug_example.Po
 	-rm -f ./$(DEPDIR)/debug.Po
+	-rm -f ./$(DEPDIR)/fusion.Po
+	-rm -f ./$(DEPDIR)/lecture.Po
+	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/util.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -858,6 +873,9 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -rf $(top_srcdir)/autom4te.cache
 		-rm -f ./$(DEPDIR)/Options_and_debug_example.Po
 	-rm -f ./$(DEPDIR)/debug.Po
+	-rm -f ./$(DEPDIR)/fusion.Po
+	-rm -f ./$(DEPDIR)/lecture.Po
+	-rm -f ./$(DEPDIR)/main.Po
 	-rm -f ./$(DEPDIR)/util.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

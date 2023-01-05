@@ -120,7 +120,7 @@ configure:3562: $? = 0
 configure:3585: result: 
 configure:3607: checking whether we are cross compiling
 configure:3615: arm-none-eabi-gcc -o conftest   -nostdlib -Wl,--entry=0 conftest.c  >&5
-/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /tmp/ccbAEv6h.o: in function `main':
+/usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: /tmp/cc2c98l5.o: in function `main':
 conftest.c:(.text+0x14): undefined reference to `fopen'
 /usr/lib/gcc/arm-none-eabi/10.3.1/../../../arm-none-eabi/bin/ld: conftest.c:(.text+0x3c): undefined reference to `fclose'
 collect2: error: ld returned 1 exit status
@@ -185,6 +185,7 @@ config.status:847: creating config.h
 config.status:1028: config.h is unchanged
 config.status:1076: executing depfiles commands
 config.status:1153: cd .       && sed -e '/# am--include-marker/d' Makefile         | make -f - am--depfiles
+make: Nothing to be done for 'am--depfiles'.
 config.status:1158: $? = 0
 
 ## ---------------- ##

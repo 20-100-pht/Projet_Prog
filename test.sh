@@ -13,7 +13,7 @@ nb_section=0
 
 #Compilation
 #gcc -g lecture.c -o lecture
-clear
+#clear
 
 function line_test(){
   fichier=$1
@@ -23,9 +23,9 @@ function line_test(){
 
   if [[ "$read_type" == "-x" ]]
   then
-    sortieA=$(./lecture $read_type $fichier $test_num)
+    sortieA=$(./main -l $read_type $fichier $test_num)
   else
-    sortieA=$(./lecture $read_type $fichier)
+    sortieA=$(./main -l $read_type $fichier)
   fi
 
   #Test si le fichier est un fichier ELF
@@ -188,7 +188,7 @@ do
 
   if [[ -d $fichier ]]
   then
-    for fich in $fichier/*
+    for fich in $fichier/*.o
     do
       #Test de recuperation du header
       header_test $fich "-h"

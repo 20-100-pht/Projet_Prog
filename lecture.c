@@ -17,7 +17,7 @@
   - Fonction Lecture
   - Fonction Affichage
   - Fonction Initialisation Struct Elf
-  - Main
+  - Affichage Global
 */
 
 /*########## Fonction Swap ##########*/
@@ -576,37 +576,14 @@ Elf *read_elf(unsigned char *buffer){
       return elf;
 }
 
-/*###############################################################################*/
+/*########## Affichage Global ##########*/
 
-int main(int argc, char *argv[]){
-
-  if(argc < 3){
-    printf("Erreur il manque des arguments\n");
-    return EXIT_FAILURE;
+void print_global_elf(Elf *elf, unsigned char *buffer){
+  print_elf_header(elf->header);
+  print_elf_section_header(elf->header, elf->secHeaders, buffer);
+  for(int i = 0; i < elf->header->e_shnum; i++){
+    print_elf_section_dump(elf->secHeaders, elf->secDumps, i);
   }
-
-    FILE* file = fopen(argv[2], "rb");
-    if(file) {
-
-      // Initialisation du Buffer
-      struct stat fileInfo;
-      stat(argv[2], &fileInfo);
-      unsigned char buffer[fileInfo.st_size];
-      fread(&buffer, fileInfo.st_size, 1, file);
-      fclose(file);
-
-      Elf *elf = read_elf(buffer);
-
-      if (!strcmp(argv[1], "-h")) print_elf_header(elf->header);
-      else if (!strcmp(argv[1], "-S")) print_elf_section_header(elf->header, elf->secHeaders, buffer);
-      else if (!strcmp(argv[1], "-x") && argc == 4) print_elf_section_dump(elf->secHeaders, elf->secDumps, atoi(argv[3]));
-      else if (!strcmp(argv[1], "-s")) print_elf_symbol_table(elf->header, elf->secHeaders, buffer, elf->symbolTab, elf->strTab, elf->nbSym);
-      else if (!strcmp(argv[1], "-r")) print_elf_relocation_section(elf->header, elf->secHeaders, buffer, elf->symbolTab, elf->strTab, elf->Reloc.Sect, elf->Reloc.nb, elf->Reloc.offset);
-      else printf("Erreur nombre d'arguments\n");
-    }
-    else{
-      printf("ERR_ELF_FILE : Erreur lecture du fichier\n");
-    }
-
-    return EXIT_SUCCESS;
+  print_elf_symbol_table(elf->header, elf->secHeaders, buffer, elf->symbolTab, elf->strTab, elf->nbSym);
+  print_elf_relocation_section(elf->header, elf->secHeaders, buffer, elf->symbolTab, elf->strTab, elf->Reloc.Sect, elf->Reloc.nb, elf->Reloc.offset);
 }
