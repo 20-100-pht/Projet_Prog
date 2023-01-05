@@ -13,28 +13,66 @@
 void fusion_sections_progbits(Elf *elf1, Elf *elf2, Elf *elfRes, unsigned char *bufferElf1, unsigned char *bufferElf2, unsigned char *bufferElfRes){
     
     int progbInd = 0;
-    int progbOffset = 0;
-    for(int i=0; i < elf1->header->e_shnum; i++){
-        if( elf1->secHeaders[i].sh_type != SHT_PROGBITS){
+    int progbOffset = 52;
+    for(int i = 0; i < elf1->header->e_shnum; i++){
+
+        if(elf1->secHeaders[i].sh_type != SHT_PROGBITS) {
             continue;
         }
 
-        for(int j = 0; j < elf2->header->e_shnum; j++){
+        elfRes->secHeaders[progbInd].nameNotid = elf1->secHeaders[i].nameNotid;
+        elfRes->secHeaders[progbInd].sh_size = elf1->secHeaders[i].sh_size;
+        elfRes->secHeaders[progbInd].sh_offset = progbOffset;
+
+        progbOffset += elf1->secHeaders[i].sh_size;
+
+        int j;
+        for(j = 0; j < elf2->header->e_shnum; j++){
             if( elf2->secHeaders[j].sh_type == SHT_PROGBITS && memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, 10) == 0 ) {
-                printf("Eureka ! : %s\n", elf1->secHeaders[i].nameNotid);
-                elfRes->secHeaders[progbInd].nameNotid = elf1->secHeaders[i].nameNotid;
-                elfRes->secHeaders[progbInd].sh_size = elf1->secHeaders[i].sh_size + elf2->secHeaders[j].sh_size;
-                elfRes->secHeaders[progbInd].sh_offset = progbOffset;
-                progbInd++;
-                progbOffset += elfRes->secHeaders[progbInd].sh_offset + elf1->secHeaders[i].sh_size + elf2->secHeaders[j].sh_size;
-                
+
+                printf("Eureka ! : %s\n", elf1->secHeaders[i].nameNotid);  
+                elfRes->secHeaders[progbInd].sh_size += elf2->secHeaders[j].sh_size;
+                progbOffset += elf2->secHeaders[j].sh_size;
+
+                break;
             } 
-        } 
+        }
+
+        elfRes->secDumps[progbInd] = malloc(elfRes->secHeaders[progbInd].sh_size);
+        memcpy(elfRes->secDumps[progbInd], elf1->secDumps[i], elf1->secHeaders[i].sh_size);
+        if(j != elf2->header->e_shnum){
+            memcpy(elfRes->secDumps[progbInd]+elf1->secHeaders[i].sh_size, elf2->secDumps[j], elf2->secHeaders[j].sh_size);
+        }
+
+        progbInd++;
     }
 
+    //On rajoute dans le résultat les sections du 2e fichier qui ne sont pas présente dans le 1er
+    for(int i = 0; i < elf2->header->e_shnum; i++){
 
+        if(elf2->secHeaders[i].sh_type != SHT_PROGBITS) {
+            continue;
+        }
+    
+        int j;
+        for(j = 0; j < elf1->header->e_shnum; j++){
+            if(memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, 10) == 0){
+                break;
+            }
+        }
+        if(elf1->secHeaders[i].sh_type == SHT_PROGBITS && j == elf1->header->e_shnum){
+            printf("Eureka ! : %s\n", elf2->secHeaders[i].nameNotid);  
 
+            elfRes->secHeaders[progbInd].nameNotid = elf2->secHeaders[i].nameNotid;
+            elfRes->secHeaders[progbInd].sh_size = elf2->secHeaders[i].sh_size;
+            elfRes->secHeaders[progbInd].sh_offset = progbOffset;
 
+            memcpy(elfRes->secDumps[progbInd], elf2->secDumps[i], elf2->secHeaders[i].sh_size);
+
+            progbOffset += elf2->secHeaders[i].sh_size;
+            progbInd++;
+        }
+    }
 }
 
 int fusion(char file1[],char file2[],char result[]) {
@@ -68,7 +106,10 @@ int fusion(char file1[],char file2[],char result[]) {
     Elf *elf2 = read_elf(bufferElf2);
     Elf *elfRes = malloc(sizeof(Elf));
     elfRes->header = malloc(sizeof(Elf32_Ehdr));
-    elfRes->secHeaders = malloc((elf1->header->e_shnum + elf2->header->e_shnum) * sizeof(Elf32_Shdr_notELF));
+
+    int nSectionMax = elf1->header->e_shnum + elf2->header->e_shnum;
+    elfRes->secHeaders = malloc(nSectionMax * sizeof(Elf32_Shdr_notELF));
+    elfRes->secDumps = malloc(nSectionMax * sizeof(unsigned char*));
 
     //print_global_elf(elf1, bufferElf1);
     //print_global_elf(elf2, bufferElf2);
