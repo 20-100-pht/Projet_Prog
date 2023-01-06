@@ -172,11 +172,6 @@ function section_header_test(){
   fi
 }
 
-#Execution :
-#./test.sh fichierELF_1 fichierELF_2 fichierELF_N nomDossierTest
-#Exemple :
-#./test.sh tests    file1.o
-#          dossier  fichier
 for fichier in $@
 do
 
