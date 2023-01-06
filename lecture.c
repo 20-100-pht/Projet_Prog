@@ -314,7 +314,7 @@ void print_elf_header(Elf32_Ehdr *header) {
   
 }
 
-void print_elf_section_header(Elf32_Ehdr *header, Elf32_SHeaders secHeaders, unsigned char *buffer) {
+void print_elf_section_header(Elf32_Ehdr *header, Elf32_SHeaders secHeaders) {
 
   int typeSection[17]={0,1,2,3,4,5,6,7,8,9,10,11,0x70000000,0x7fffffff,0x80000000,0xffffffff,0x70000003};
   char *typeSectionNom[17];
@@ -414,7 +414,7 @@ void print_elf_section_dump(Elf32_SHeaders secHeaders, Elf32_Sdumps dumps, int n
   
 }
 
-void print_elf_symbol_table(Elf32_Ehdr *header, Elf32_Shdr_notELF *secHeaders, unsigned char *buffer, Elf32_Sym *symbolTab, unsigned char *strTab, int nbSym) {
+void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, int nbSym) {
   
     char *typeSectionNom[19];
     typeSectionNom[0]="NOTYPE  ";
@@ -491,7 +491,7 @@ void print_elf_symbol_table(Elf32_Ehdr *header, Elf32_Shdr_notELF *secHeaders, u
     }
 }
 
-void print_elf_relocation_section(Elf32_Ehdr *header, Elf32_Shdr_notELF *secHeaders, unsigned char *buffer, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *Sect, int nb,  int offset) {
+void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *Sect, int nb,  int offset) {
 
   char *numEnt;
   if(nb == 1){
@@ -581,10 +581,10 @@ Elf *read_elf(unsigned char *buffer){
 
 void print_global_elf(Elf *elf, unsigned char *buffer){
   print_elf_header(elf->header);
-  print_elf_section_header(elf->header, elf->secHeaders, buffer);
+  print_elf_section_header(elf->header, elf->secHeaders);
   for(int i = 0; i < elf->header->e_shnum; i++){
     print_elf_section_dump(elf->secHeaders, elf->secDumps, i);
   }
-  print_elf_symbol_table(elf->header, elf->secHeaders, buffer, elf->symbolTab, elf->strTab, elf->nbSym);
-  print_elf_relocation_section(elf->header, elf->secHeaders, buffer, elf->symbolTab, elf->strTab, elf->Reloc.Sect, elf->Reloc.nb, elf->Reloc.offset);
+  print_elf_symbol_table(elf->secHeaders, elf->symbolTab, elf->strTab, elf->nbSym);
+  print_elf_relocation_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->Reloc.Sect, elf->Reloc.nb, elf->Reloc.offset);
 }

@@ -10,9 +10,9 @@
 
 #include "lecture.h"
 
-void fusion_sections_progbits(Elf *elf1, Elf *elf2, Elf *elfRes, unsigned char *bufferElf1, unsigned char *bufferElf2, unsigned char *bufferElfRes){
+void fusion_sections_progbits(Elf *elf1, Elf *elf2, Elf *elfRes){
     
-    int progbInd = 0;
+    int progbInd = elfRes->header->e_shnum;
     int progbOffset = 52;
     for(int i = 0; i < elf1->header->e_shnum; i++){
 
@@ -56,23 +56,35 @@ void fusion_sections_progbits(Elf *elf1, Elf *elf2, Elf *elfRes, unsigned char *
     
         int j;
         for(j = 0; j < elf1->header->e_shnum; j++){
-            if(memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, 10) == 0){
+            if(memcmp(elf1->secHeaders[j].nameNotid, elf2->secHeaders[i].nameNotid, 10) == 0){
                 break;
             }
         }
-        if(elf1->secHeaders[i].sh_type == SHT_PROGBITS && j == elf1->header->e_shnum){
+        if(j == elf1->header->e_shnum){ //d
             printf("Eureka ! : %s\n", elf2->secHeaders[i].nameNotid);  
 
             elfRes->secHeaders[progbInd].nameNotid = elf2->secHeaders[i].nameNotid;
             elfRes->secHeaders[progbInd].sh_size = elf2->secHeaders[i].sh_size;
             elfRes->secHeaders[progbInd].sh_offset = progbOffset;
 
+            elfRes->secDumps[progbInd] = malloc(elfRes->secHeaders[progbInd].sh_size);
             memcpy(elfRes->secDumps[progbInd], elf2->secDumps[i], elf2->secHeaders[i].sh_size);
 
             progbOffset += elf2->secHeaders[i].sh_size;
             progbInd++;
         }
     }
+
+    elfRes->header->e_shnum = progbInd;
+
+    for(int i = 0; i < elfRes->header->e_shnum; i++){
+        print_elf_section_dump(elfRes->secHeaders, elfRes->secDumps, i);
+    }
+}
+
+void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes){
+
+    elf1->
 }
 
 int fusion(char file1[],char file2[],char result[]) {
@@ -114,7 +126,7 @@ int fusion(char file1[],char file2[],char result[]) {
     //print_global_elf(elf1, bufferElf1);
     //print_global_elf(elf2, bufferElf2);
 
-    fusion_sections_progbits(elf1, elf2, elfRes, bufferElf1, bufferElf2, bufferElfRes);
+    fusion_sections_progbits(elf1, elf2, elfRes);
 
     fclose(fileElf1);
     fclose(fileElf2);

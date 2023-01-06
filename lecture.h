@@ -70,13 +70,13 @@ void read_elf_relocation_section(unsigned char *buffer, Elf *elf);
 
 void print_elf_header(Elf32_Ehdr *header);
 
-void print_elf_section_header(Elf32_Ehdr *header, Elf32_SHeaders secHeaders, unsigned char *buffer);
+void print_elf_section_header(Elf32_Ehdr *header, Elf32_SHeaders secHeaders);
 
 void print_elf_section_dump(Elf32_SHeaders secHeaders, Elf32_Sdumps dumps, int num);
 
-void print_elf_symbol_table(Elf32_Ehdr *header, Elf32_Shdr_notELF *secHeaders, unsigned char *buffer, Elf32_Sym *symbolTab, unsigned char *strTab, int nbSym);
+void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, int nbSym);
 
-void print_elf_relocation_section(Elf32_Ehdr *header, Elf32_Shdr_notELF *secHeaders, unsigned char *buffer, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *Sect, int nb,  int offset);
+void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *Sect, int nb,  int offset);
 
 /*########## Fonction Initialisation Struct Elf ##########*/
 
