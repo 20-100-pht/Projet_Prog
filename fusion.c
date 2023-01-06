@@ -19,9 +19,8 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, Elf32_Word 
     
     if(Ind == 0) Offset = 52;
     else {
-        Offset = elfRes->secHeaders[Ind].sh_offset + elfRes->secHeaders[Ind].sh_size;
+        Offset = elfRes->secHeaders[Ind-1].sh_offset + elfRes->secHeaders[Ind-1].sh_size;
     }
-
 
     for(int i = 0; i < elf1->header->e_shnum; i++){ 
 
@@ -37,9 +36,9 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, Elf32_Word 
 
         int j;
         for(j = 0; j < elf2->header->e_shnum; j++){
-            if( elf2->secHeaders[j].sh_type == sectionType && memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, 10) == 0 ) {
+            if( elf2->secHeaders[j].sh_type == sectionType && memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, strlen((const char*)elf1->secHeaders[i].nameNotid)) == 0 ) {
 
-                printf("Eureka ! : %s\n", elf1->secHeaders[i].nameNotid);  
+                //printf("Eureka ! : %s\n", elf1->secHeaders[i].nameNotid);  
                 elfRes->secHeaders[Ind].sh_size += elf2->secHeaders[j].sh_size;
                 Offset += elf2->secHeaders[j].sh_size;
 
@@ -65,12 +64,12 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, Elf32_Word 
     
         int j;
         for(j = 0; j < elf1->header->e_shnum; j++){
-            if(memcmp(elf1->secHeaders[j].nameNotid, elf2->secHeaders[i].nameNotid, 10) == 0){
+            if(memcmp(elf1->secHeaders[j].nameNotid, elf2->secHeaders[i].nameNotid, strlen((const char*)elf1->secHeaders[i].nameNotid)) == 0){
                 break;
             }
         }
         if(j == elf1->header->e_shnum){ 
-            printf("Eureka ! : %s\n", elf2->secHeaders[i].nameNotid);  
+            //printf("Eureka ! : %s\n", elf2->secHeaders[i].nameNotid);  
 
             elfRes->secHeaders[Ind].nameNotid = elf2->secHeaders[i].nameNotid;
             elfRes->secHeaders[Ind].sh_size = elf2->secHeaders[i].sh_size;
@@ -100,6 +99,15 @@ void print_fusion(Elf *elfRes){
     for(int i = 0; i < elfRes->header->e_shnum; i++){
         print_elf_section_dump(elfRes->secHeaders, elfRes->secDumps, i);
     }
+    print_elf_symbol_table(elfRes->secHeaders, elfRes->symbolTab, elfRes->strTab, elfRes->nbSym);
+}
+
+void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff){
+    elf->symbolTab[elf->nbSym] = *sym;
+    const char* sNameAddr = (const char*)strTab + sym->st_name;
+    strcpy(elf->strTab+(*strTabOff), sNameAddr);
+    elf->nbSym++;
+    (*strTabOff) += strlen(sNameAddr)+1;
 }
 
 void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes){
@@ -107,27 +115,23 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes){
     int strTabOff = 0;
     for(int i = 0; i < elf1->nbSym; i++){
         if(ELF32_ST_BIND(elf1->symbolTab[i].st_info) == STB_LOCAL){
-            elfRes->symbolTab[elfRes->nbSym] = elf1->symbolTab[i];
-            //strcpy()
-            elfRes->nbSym++;
+            add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
             continue;
         }
 
         int j;
-        for(j = 0; i < elf2->nbSym; j++){
-            if(memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, 10)){
+        for(j = 0; j < elf2->nbSym; j++){
+            if(strcmp((const char*)(elf1->strTab + elf1->symbolTab[i].st_name), (const char*)(elf2->strTab + elf2->symbolTab[j].st_name)) == 0){
 
-                if(elf1->symbolTab[i].st_shndx != SHN_UNDEF && elf1->symbolTab[i].st_shndx != SHN_UNDEF){
+                if(elf1->symbolTab[i].st_shndx != SHN_UNDEF && elf2->symbolTab[j].st_shndx != SHN_UNDEF){
                     fprintf(stderr, "ERREUR : Un symbole est défini 2 fois");
                     exit(EXIT_FAILURE);
                 }
-                else if(elf1->symbolTab[i].st_shndx != SHN_UNDEF && elf1->symbolTab[i].st_shndx == SHN_UNDEF){ 
-                    elfRes->symbolTab[elfRes->nbSym] = elf1->symbolTab[i];
-                    elfRes->nbSym++;
+                else if(elf1->symbolTab[i].st_shndx != SHN_UNDEF && elf2->symbolTab[j].st_shndx == SHN_UNDEF){
+                    add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
                 }
                 else {
-                    elfRes->symbolTab[elfRes->nbSym] = elf2->symbolTab[i];
-                    elfRes->nbSym++;
+                    add_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff);
                 }
             }
         }
@@ -164,19 +168,21 @@ int fusion(char file1[],char file2[],char result[]) {
     Elf *elf1 = read_elf(bufferElf1);
     Elf *elf2 = read_elf(bufferElf2);
     Elf *elfRes = malloc(sizeof(Elf));
-    elfRes->header = calloc(1,sizeof(Elf32_Ehdr));
 
     int nSectionMax = elf1->header->e_shnum + elf2->header->e_shnum;
     elfRes->secHeaders = malloc(nSectionMax * sizeof(Elf32_Shdr_notELF));
     elfRes->secDumps = malloc(nSectionMax * sizeof(unsigned char*));
     elfRes->symbolTab = malloc((elf1->nbSym+elf2->nbSym)*sizeof(Elf32_Sym));
-    elfRes->strTab = malloc((elf1->nbSym+elf2->nbSym)*sizeof(unsigned char));
+    elfRes->strTab = malloc((elf1->nbSym+elf2->nbSym)*30*sizeof(unsigned char));
+    elfRes->header = calloc(1,sizeof(Elf32_Ehdr));
 
     //print_global_elf(elf1, bufferElf1);
     //print_global_elf(elf2, bufferElf2);
 
     fusion_progbits(elf1, elf2, elfRes);
     fusion_nobits(elf1, elf2, elfRes);
+    fusion_symbol_tables(elf1, elf2, elfRes);
+
     print_fusion(elfRes);
 
     fclose(fileElf1);

@@ -13,7 +13,7 @@
 
 /* Index Code :
   - Fonction Swap
-  - Fonction Auxiliaire
+  - Fonction Auxiliaire a la lecture
   - Fonction Lecture
   - Fonction Affichage
   - Fonction Initialisation Struct Elf

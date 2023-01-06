@@ -27,8 +27,7 @@ Cas de fusion de fichiers ELF :
 ./main <-f> <nom_fichier_1> <nom_fichier_2> <nom_fichier_resultat>
 
 # Programme de test
----Flèches ???? ---
---- Option debug ---
+
 Description : 
 
 Nous utilisons un test automatisé pour la lecture de fichier : 
@@ -43,15 +42,22 @@ Nous utilisons un test automatisé pour la lecture de fichier :
     Puis il est affiché le nombre d'erreurs trouvées dans cette partie.
     Affichage type : <Test_symb_tab : 2 erreurs trouvées dans test1.o, ECHEC>, en rouge.
 
+    De plus à la fin des lignes vertes et rouges il y a une flèche suivie d'un nombre(->10) indiquant le numéro de la ligne 
+    du résultat attendu et du résultat obtenu. Ceci permet de voir si il y a une ligne qui à été oubliée dans notre version. 
+
+    Enfin il y a une option de debug qui va afficher toutes les lignes qui sont présentes dans les deux résultats. 
 
 
 
 
 
 ./test.sh <dossier>
-    On va tester tous les fichiers.o du dossier
-./test.sh <fichier>
-    On va tester le fichier.o
+    On va tester tous les fichiers.o du dossier.
+./test.sh <fichier.o>
+    On va tester le fichier.o.
+
+./test.sh <-d> <fichier.o>
+    On va tester le fichier.o avec l'option de debug.
 
 Utilisation du programmme de test  :
 
@@ -61,11 +67,48 @@ doivent êtres également en anglais et donc linux doit être configuré en angl
 
 
 
+# Descriptif de la structure 
+
+               /   écriture du fichier dans un buffer en mémoire et écriture des infos du buffer dans une structure elf  
+      lecture -
+     /         \   affichage des infos sélectionnées  
+Main 
+     \         /   écriture des fichiers dans des buffer en mémoire et écriture info des buffer dans des structures elf  (appel à lecture)
+      fusion   --  fusion des différentes sections, tables des symboles et nom de sections
+               \   reste a venir ;;; la suite dans le prochain épisode 
+    
+    ### Main
+    Appels aux fonctions de lecture ou de fusion selon les arguments donnés. 
 
 
-#
+    ### Lecture.c
+    Récupère les informations du format ELF d'un fichier, 
+    les stocke dans une structure et les affiche selon les options données en argument.
+        - Fonction Swap little endian à big endian 
+        - Fonction Auxiliaire a la lecture
+        - Fonction Lecture en mémoire vers struct Elf
+        - Fonction Affichage struct Elf
+        - Fonction Initialisation Struct Elf
+        - Affichage Global
+
+
+
+    ### Fusion.c 
+
+
+
 
 
 # Autres  
 Compilation d'un fichier en 32 bits big endian :
 arm-none-eabi-gcc -mbig-endian -c <fichier>
+
+Fusion de deux fichiers 32 bits big endian :
+arm-none-eabi-ld -EB -r -o <fichier_destination> <fichier1.o> <fichier2.o>
+
+
+
+
+###
+Custom ELF Loader intended for pedagogic use
+###
