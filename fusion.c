@@ -135,6 +135,27 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes){
                 }
             }
         }
+        //Le symbole est seulement dans le 1er fichier
+        if(j == elf2->nbSym){
+            add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
+        }
+    }
+
+    for(int i = 0; i < elf2->nbSym; i++){
+        if(ELF32_ST_BIND(elf2->symbolTab[i].st_info) == STB_LOCAL){
+            add_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff);
+            continue;
+        }
+
+        int j;
+        for(j = 0; j < elf1->nbSym; j++){
+            if(strcmp((const char*)(elf2->strTab + elf2->symbolTab[i].st_name), (const char*)(elf1->strTab + elf1->symbolTab[j].st_name)) == 0){
+                break;
+            }
+        }
+        if(j == elf1->nbSym){
+            add_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff);
+        }
     }
 }
 

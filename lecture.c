@@ -481,9 +481,10 @@ void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab,
             break;
         }
 
-        //Si type est section alors shstrtab sinon strtab
+        //Si type est section alors s sinon strtab
         if(symbolTab[j].st_info == 3){
-            printf("%s\n", secHeaders[i].nameNotid); // Name
+            //printf("%s\n", secHeaders[i].nameNotid); // Name
+            printf("%s\n");
         }
         else{
             printf("%s\n", strTab + symbolTab[j].st_name);
