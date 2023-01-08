@@ -451,18 +451,6 @@ void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab,
     visType[5]="SINGLETON";
     visType[6]="ELIMINATE";
 
-    int indType[9]={0,1,2,3,4,5,6,7,0xfff1};
-    char *indTypeNom[9];
-    indTypeNom[0]="UND ";
-    indTypeNom[1]="  1 ";
-    indTypeNom[2]="  2 ";
-    indTypeNom[3]="  3 ";
-    indTypeNom[4]="  4 ";
-    indTypeNom[5]="  5 ";
-    indTypeNom[6]="  6 ";
-    indTypeNom[7]="  7 ";
-    indTypeNom[8]="ABS ";
-
     printf("\nSymbol table '.symtab' contains %d entries:\n   Num:    Value  Size Type    Bind   Vis      Ndx Name\n", nbSym);
 
     for (int j = 0; j < nbSym; j++) {
@@ -474,11 +462,14 @@ void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab,
         printf("%s", visType[symbolTab[j].st_other]); // Vis
         
         //Chaque type d'index
-        int i;
-        for (i = 0; i < 9; i++) {
-            if(symbolTab[j].st_shndx != indType[i]) continue;
-            printf("%s", indTypeNom[i]); // Ndx
-            break;
+        if(symbolTab[j].st_shndx == 0){
+          printf("UND ");
+        }
+        else if(symbolTab[j].st_shndx == 0xfff1){
+          printf("ABS ");
+        }
+        else{
+          printf("  %i ", symbolTab[j].st_shndx);
         }
 
         //Si type est section alors s sinon strtab
