@@ -1,5 +1,15 @@
 #include <elf.h>
 
+#define ELF32_ST_BIND(i) ((i)>>4)
+#define ELF32_ST_TYPE(i) ((i)&0xf)
+#define ELF32_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
+
+#define STB_LOCAL 0
+#define STB_GLOBAL 0
+
+#define SHN_ABS 0xfff1
+#define SHN_UNDEF 0
+
 typedef struct {
   Elf32_Word sh_name;
   Elf32_Word sh_type;
