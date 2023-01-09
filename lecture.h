@@ -1,8 +1,6 @@
-#include <elf.h>
+#pragma once
 
-#define ELF32_ST_BIND(i) ((i)>>4)
-#define ELF32_ST_TYPE(i) ((i)&0xf)
-#define ELF32_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
+#include <elf.h>
 
 #define STB_LOCAL 0
 #define STB_GLOBAL 1
@@ -25,10 +23,10 @@ typedef struct {
 } Elf32_Shdr_notELF;
 
 typedef struct {
-  Elf32_Rel *Sect;
+  Elf32_Rel *sect;
   int nb;
   int offset;
-} Relocation;
+} Relocations;
 
 typedef unsigned char** Elf32_Sdumps;
 typedef Elf32_Shdr_notELF* Elf32_SHeaders;
@@ -40,7 +38,7 @@ typedef struct {
   Elf32_Sym *symbolTab;
   unsigned char *strTab;
   int nbSym;
-  Relocation Reloc;
+  Relocations relocs;
 } Elf;
 
 Elf *read_elf(unsigned char *buffer);

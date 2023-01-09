@@ -15,7 +15,7 @@ Cas de lecture d'un seul fichier :
     Options :
         "-a" : Affiche toutes les parties ci-dessous
         "-h" : Affiche l’en-tete d’un fichier ELF (header)
-        "-S" : Affiche la table des sectionsd’un fichier ELF (section header)
+        "-S" : Affiche la table des sections d’un fichier ELF (section header)
         "-s" : Affiche la table des symboles d’un fichier ELF (symbol table)
         "-r" : Afficher les tables de reimplantation d’un fichier ELF pour machine ARM (relocation section)
         "-x" : Affiche le contenu de l’une des sections d’un fichier ELF (section dump)
@@ -49,6 +49,7 @@ Nous utilisons un test automatisé pour la lecture de fichier :
 
 
 
+Utilisation du programmme de test  :
 
 
 ./test.sh <dossier>
@@ -59,7 +60,6 @@ Nous utilisons un test automatisé pour la lecture de fichier :
 ./test.sh <-d> <fichier.o>
     On va tester le fichier.o avec l'option de debug.
 
-Utilisation du programmme de test  :
 
 ATTENTION : Pour vérifier que notre programme fonctionne bien nous comparons nos sorties aux sorties de la commande 
 readelf. Les sorties de notre programme sont en anglais ainsi, si l'on souhaite les comparer avec les sorties des commandes elles 
@@ -85,18 +85,26 @@ Main
     Récupère les informations du format ELF d'un fichier, 
     les stocke dans une structure et les affiche selon les options données en argument.
         - Fonction Swap little endian à big endian 
-        - Fonction Auxiliaire a la lecture
-        - Fonction Lecture en mémoire vers struct Elf
-        - Fonction Affichage struct Elf
-        - Fonction Initialisation Struct Elf
-        - Affichage Global
-
-
+        - Fonction Auxiliaire a la lecture, qui permettent de vérifier que le fichier soit bien en big endian et qui permet 
+        de récupérer les flags de chaque section
+        - Fonction Lecture en mémoire vers struct Elf : 
+        - Fonction Affichage struct Elf : 
+        - Fonction Initialisation Struct Elf :
+        - Affichage Global qui appelle selon les arguments donnés les autres fonctions d'affichages (header, section) 
 
     ### Fusion.c 
+        - Fonction de concaténation de sections : Concatène les sections lorsque c'est nécéssaire sinon, les copie dans le fichier résultat. 
+        - add_symbol : 
+        - fusion_symbol_tables :
+        - fusion :
+        - Affichage Global qui appelle selon les arguments donnés les autres fonctions d'affichages (header, section) 
 
 
+    ## Main.c
+        - Main : Permet d'appeler le code ci-dessus en fonction des arguments reçus.
 
+
+   
 
 
 # Autres  

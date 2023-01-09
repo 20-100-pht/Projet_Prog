@@ -1,0 +1,10 @@
+Liste et description des tests : 
+
+Ces tests permettent de vérifier que le programme fonctionne comme attendu.
+- 
+-
+-
+-
+- 
+-
+-

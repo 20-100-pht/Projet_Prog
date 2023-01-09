@@ -226,11 +226,11 @@ void read_elf_relocation_section(unsigned char *buffer, Elf *elf) {
   for (int i = 0; i < elf->header->e_shnum; i++) {
     //Si relocation
     if (elf->secHeaders[i].sh_type == SHT_REL){
-      elf->Reloc.nb = elf->secHeaders[i].sh_size / sizeof(Elf32_Rel);
-      elf->Reloc.Sect = malloc(elf->secHeaders[i].sh_size);
-      elf->Reloc.offset = elf->secHeaders[i].sh_offset;
+      elf->relocs.nb = elf->secHeaders[i].sh_size / sizeof(Elf32_Rel);
+      elf->relocs.sect = malloc(elf->secHeaders[i].sh_size);
+      elf->relocs.offset = elf->secHeaders[i].sh_offset;
       //Copie de la section reloc
-      memcpy(elf->Reloc.Sect, &buffer[elf->secHeaders[i].sh_offset], elf->secHeaders[i].sh_size);
+      memcpy(elf->relocs.sect, &buffer[elf->secHeaders[i].sh_offset], elf->secHeaders[i].sh_size);
     }
   }
 }
@@ -369,12 +369,11 @@ void print_elf_section_header(Elf32_Ehdr *header, Elf32_SHeaders secHeaders) {
 
 void print_elf_section_dump(Elf32_SHeaders secHeaders, Elf32_Sdumps dumps, int num){
 
-  //Si la section n'as pas de contenu et si elle n'est pas de type : NOBITS
   int flag = 0;
   if(secHeaders[num].sh_size != 0 && secHeaders[num].sh_type != 0x8){
     printf("\nHex dump of section '%s':\n", secHeaders[num].nameNotid);
 
-    if(num==1){ //A regler!
+    if(num==1){
       printf(" NOTE: This section has relocations against it, but these have NOT been applied to this dump.\n");
     }
 
@@ -474,8 +473,7 @@ void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab,
 
         //Si type est section alors s sinon strtab
         if(symbolTab[j].st_info == 3){
-            //printf("%s\n", secHeaders[i].nameNotid); // Name
-            printf("\n");
+            printf("%s\n", secHeaders[symbolTab[j].st_shndx].nameNotid); // Name
         }
         else{
             printf("%s\n", strTab + symbolTab[j].st_name);
@@ -483,7 +481,7 @@ void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab,
     }
 }
 
-void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *Sect, int nb,  int offset) {
+void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *sect, int nb, int offset) {
 
   char *numEnt;
   if(nb == 1){
@@ -495,10 +493,10 @@ void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symb
   printf("\nRelocation section '.rel.text' at offset 0x%x contains %d %s:\n Offset     Info    Type            Sym.Value  Sym. Name\n",offset, nb, numEnt);
   for (int i = 0; i < nb; i++)
   {
-    printf("%8.8x  ", Sect[i].r_offset);
-    printf("%8.8x ", Sect[i].r_info);
+    printf("%8.8x  ", sect[i].r_offset);
+    printf("%8.8x ", sect[i].r_info);
     
-    switch (ELF32_R_TYPE(Sect[i].r_info))
+    switch (ELF32_R_TYPE(sect[i].r_info))
     {
     case R_ARM_CALL:
       printf("R_ARM_CALL       ");
@@ -513,7 +511,7 @@ void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symb
       break;
     }
 
-    int symInd = (Sect[i].r_info >> 8);
+    int symInd = (sect[i].r_info >> 8);
     if(symInd == 0){
       printf("\n");
       continue;
@@ -565,7 +563,7 @@ Elf *read_elf(unsigned char *buffer){
 
       // Table Relocation 
       read_elf_relocation_section(buffer, elf);
-      swap_Reloc_Sect(elf->Reloc.Sect, elf->Reloc.nb);
+      swap_Reloc_Sect(elf->relocs.sect, elf->relocs.nb);
       return elf;
 }
 
@@ -578,5 +576,5 @@ void print_global_elf(Elf *elf, unsigned char *buffer){
     print_elf_section_dump(elf->secHeaders, elf->secDumps, i);
   }
   print_elf_symbol_table(elf->secHeaders, elf->symbolTab, elf->strTab, elf->nbSym);
-  print_elf_relocation_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->Reloc.Sect, elf->Reloc.nb, elf->Reloc.offset);
+  print_elf_relocation_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->relocs.sect, elf->relocs.nb, elf->relocs.offset);
 }

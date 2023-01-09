@@ -7,11 +7,28 @@
 #include <unistd.h>
 #include <elf.h>
 #include <string.h>
-#include <stdbool.h>
 
-#include "lecture.h"
+/* Index Code :
+  - Fonction Affichage
+  - Fonction Fonction Fusion Section PROGBITS, NOBITS, ARM_ATTRIBUTES
+  - Fonction Fonction Fusion Table des Symbole
+  - Fonction Fonction Fusion Table Relocation
+  - Fonction Fonction Fusion Global
+*/
 
+/*########## Fonction Affichage ##########*/
 
+void print_fusion(Elf *elfRes){
+    print_elf_header(elfRes->header);
+    printf("\n\n");
+    print_elf_section_header(elfRes->header, elfRes->secHeaders);
+    for(int i = 0; i < elfRes->header->e_shnum; i++){
+        print_elf_section_dump(elfRes->secHeaders, elfRes->secDumps, i);
+    }
+    print_elf_symbol_table(elfRes->secHeaders, elfRes->symbolTab, elfRes->strTab, elfRes->nbSym);
+}
+
+/*########## Fonction Fusion Section PROGBITS, NOBITS, ARM_ATTRIBUTES ##########*/
 
 void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection *lSecNumCorrection){
     
@@ -22,6 +39,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
             continue;
         }
 
+        elfRes->secHeaders[i].sh_type = elf1->secHeaders[i].sh_type;
         elfRes->secHeaders[i].nameNotid = elf1->secHeaders[i].nameNotid;
         elfRes->secHeaders[i].sh_size = elf1->secHeaders[i].sh_size;
         elfRes->secHeaders[i].sh_offset = offset;
@@ -36,8 +54,10 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
             }
 
             if(memcmp(elf1->secHeaders[i].nameNotid, elf2->secHeaders[j].nameNotid, strlen((const char*)elf1->secHeaders[i].nameNotid)) == 0) {
-                elfRes->secHeaders[i].sh_size += elf2->secHeaders[j].sh_size;
-                offset += elf2->secHeaders[j].sh_size;
+                if(elf2->secHeaders[j].sh_type != SHT_ARM_ATTRIBUTES){
+                    elfRes->secHeaders[i].sh_size += elf2->secHeaders[j].sh_size;
+                    offset += elf2->secHeaders[j].sh_size;
+                }
                 break;
             } 
         }
@@ -46,11 +66,17 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
         elfRes->secDumps[i] = malloc(elfRes->secHeaders[i].sh_size);
         memcpy(elfRes->secDumps[i], elf1->secDumps[i], elf1->secHeaders[i].sh_size);
 
+        //Et si on a trouvé une section du même nom dans le 2e fichier on la fusionne avec la section du 1er
         if(j != elf2->header->e_shnum){
-            //Et si on a trouvé une section du même nom dans le 2e fichier on la fusionne avec la section du 1er
-            memcpy(elfRes->secDumps[i]+elf1->secHeaders[i].sh_size, elf2->secDumps[j], elf2->secHeaders[j].sh_size);
+            //Si c'est une section ARM_ATTRIBUTES alors elle est identique dans les 2 fichiers, on la duplique pas en fusionnant. On corrige juste 
+            if(elf2->secHeaders[j].sh_type != SHT_ARM_ATTRIBUTES){
+                memcpy(elfRes->secDumps[i]+elf1->secHeaders[i].sh_size, elf2->secDumps[j], elf2->secHeaders[j].sh_size);
+                lSecNumCorrection[j].offset = elf1->secHeaders[i].sh_size;
+            }
+            else{
+                lSecNumCorrection[j].offset = 0;
+            }
             lSecNumCorrection[j].newNumber = i;
-            lSecNumCorrection[j].offset = elf1->secHeaders[i].sh_size;
         }
     }
 
@@ -72,6 +98,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
         }
         if(j == elf1->header->e_shnum){   
 
+            elfRes->secHeaders[iSec].sh_type = elf1->secHeaders[i].sh_type;
             elfRes->secHeaders[iSec].nameNotid = elf2->secHeaders[i].nameNotid;
             elfRes->secHeaders[iSec].sh_size = elf2->secHeaders[i].sh_size;
             elfRes->secHeaders[iSec].sh_offset = offset;
@@ -89,14 +116,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
     }
 }
 
-void print_fusion(Elf *elfRes){
-    printf("nbS : %d", elfRes->header->e_shnum);
-    for(int i = 0; i < elfRes->header->e_shnum; i++){
-        print_elf_section_dump(elfRes->secHeaders, elfRes->secDumps, i);
-    }
-    print_elf_symbol_table(elfRes->secHeaders, elfRes->symbolTab, elfRes->strTab, elfRes->nbSym);
-    print_elf_section_header(elfRes->header, elfRes->secHeaders);
-}
+/*########## Fonction Fusion Table des Symbole ##########*/
 
 void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff, bool isElf2Sym, SectionNumberingCorrection* lSecNumCorrection){
 
@@ -112,13 +132,13 @@ void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff,
     elf->symbolTab[elf->nbSym].st_name = (*strTabOff);
     //On construit la nouvelle table des strings
     const char* sNameAddr = (const char*)strTab + sym->st_name;
-    strcpy(elf->strTab+(*strTabOff), sNameAddr);
+    strcpy((char*)(elf->strTab+(*strTabOff)), sNameAddr);
     (*strTabOff) += strlen(sNameAddr)+1;
 
     elf->nbSym++;
 }
 
-void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection){
+void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection, int *lSymNumCorrection){
 
     int strTabOff = 1;
     for(int i = 0; i < elf1->nbSym; i++){
@@ -157,7 +177,8 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
         }
     }
 
-    for(int i = 0; i < elf2->nbSym; i++){
+    //On commence à 1 pour éviter de dupliquer le symbole nul
+    for(int i = 1; i < elf2->nbSym; i++){
 
         if(ELF32_ST_BIND(elf2->symbolTab[i].st_info) == STB_LOCAL){
             //Si c'est un symbole de type section on l'ajoute seulement si il est pas déjà présent dans le 1er fichier
@@ -180,6 +201,45 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
     }
 }
 
+/*########## Fonction Fusion Table Relocation ##########*/
+
+void fusion_reimplantations_tables (Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection){
+
+    memcpy(elfRes->relocs.sect, elf1->relocs.sect, elf1->relocs.nb*sizeof(Elf32_Rel));
+
+    for(int i = 0; i < elf2->relocs.nb; i++){
+        
+    }
+}
+
+/*########## Fonction Allocation et Liberation Memoire ##########*/
+
+void allocation_elf_resultat(Elf *elf1, Elf *elf2, Elf *elfRes){
+    int nSectionMax = elf1->header->e_shnum + elf2->header->e_shnum;
+    elfRes->secHeaders = malloc(nSectionMax * sizeof(Elf32_Shdr_notELF));
+    elfRes->secDumps = malloc(nSectionMax * sizeof(unsigned char*));
+    elfRes->symbolTab = malloc((elf1->nbSym+elf2->nbSym)*sizeof(Elf32_Sym));
+    elfRes->strTab = malloc((elf1->nbSym+elf2->nbSym)*30*sizeof(unsigned char));
+    elfRes->header = calloc(1,sizeof(Elf32_Ehdr));
+    elfRes->relocs.sect = malloc((elf1->relocs.nb+elf2->relocs.nb)*sizeof(Elf32_Rel));
+
+    // ### réecriture du header dans elfRes ###
+    memcpy(elfRes->header, elf1->header, sizeof(Elf32_Ehdr) );
+    elfRes->header->e_shstrndx = 0;
+    elfRes->header->e_shoff = 0;
+    elfRes->header->e_shnum = elf1->header->e_shnum; 
+
+}
+
+void Liberation_Elf(Elf *elf){
+    free(elf->header);
+    free(elf->symbolTab);
+    free(elf->relocs.sect);
+    free(elf);
+}
+
+/*########## Fonction Fusion Global ##########*/
+
 int fusion(char file1[],char file2[],char result[]) {
 
     FILE* fileElf1 = fopen(file1, "rb");
@@ -190,6 +250,8 @@ int fusion(char file1[],char file2[],char result[]) {
         printf("ERR_ELF_FILE : Erreur lecture du fichier\n");
         return EXIT_FAILURE;
     }
+
+    // ### Lecture des deux fichiers nécessaires à la fusion ###
 
     int sizeResult = 0;
 
@@ -205,27 +267,33 @@ int fusion(char file1[],char file2[],char result[]) {
     sizeResult += fileInfo.st_size;
     fread(&bufferElf2, fileInfo.st_size, 1, fileElf2);
 
-    unsigned char bufferElfRes[sizeResult];
+    //unsigned char bufferElfRes[sizeResult];
 
     Elf *elf1 = read_elf(bufferElf1);
     Elf *elf2 = read_elf(bufferElf2);
     Elf *elfRes = malloc(sizeof(Elf));
 
-    int nSectionMax = elf1->header->e_shnum + elf2->header->e_shnum;
-    elfRes->secHeaders = malloc(nSectionMax * sizeof(Elf32_Shdr_notELF));
-    elfRes->secDumps = malloc(nSectionMax * sizeof(unsigned char*));
-    elfRes->symbolTab = malloc((elf1->nbSym+elf2->nbSym)*sizeof(Elf32_Sym));
-    elfRes->strTab = malloc((elf1->nbSym+elf2->nbSym)*30*sizeof(unsigned char));
-    elfRes->header = calloc(1,sizeof(Elf32_Ehdr));
+    // ### allocation et initialisation struct elf resultat ###
+    allocation_elf_resultat(elf1, elf2, elfRes);
 
-    elfRes->header->e_shnum = elf1->header->e_shnum; //Section nulle
+    // ### Fusion ###
 
     SectionNumberingCorrection lSecNumCorrection[elf2->header->e_shnum];
+    int lSymNumCorrection[elf2->nbSym];
+    
 
     fusion_sections_simpleconcat(elf1, elf2, elfRes, lSecNumCorrection);
-    fusion_symbol_tables(elf1, elf2, elfRes, lSecNumCorrection);
+    fusion_symbol_tables(elf1, elf2, elfRes, lSecNumCorrection, lSymNumCorrection);
+
+    // ### Affichage ###
 
     print_fusion(elfRes);
+
+    // ### Libération mémoire et fermeture fichiers ###
+
+    Liberation_Elf(elf1);
+    Liberation_Elf(elf2);
+    Liberation_Elf(elfRes);
 
     fclose(fileElf1);
     fclose(fileElf2);
