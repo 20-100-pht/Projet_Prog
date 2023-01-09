@@ -19,7 +19,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
 
     for(int i = 0; i < elf1->header->e_shnum; i++){ 
 
-        if(elf1->secHeaders[i].sh_type != SHT_PROGBITS && elf1->secHeaders[i].sh_type != SHT_NOBITS) {
+        if(elf1->secHeaders[i].sh_type != SHT_PROGBITS && elf1->secHeaders[i].sh_type != SHT_NOBITS && elf1->secHeaders[i].sh_type != SHT_ARM_ATTRIBUTES) {
             continue;
         }
 
@@ -32,7 +32,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
         int j;
         for(j = 0; j < elf2->header->e_shnum; j++){
 
-            if(elf2->secHeaders[j].sh_type != SHT_PROGBITS && elf2->secHeaders[j].sh_type != SHT_NOBITS){
+            if(elf2->secHeaders[j].sh_type != SHT_PROGBITS && elf2->secHeaders[j].sh_type != SHT_NOBITS && elf2->secHeaders[j].sh_type != SHT_ARM_ATTRIBUTES){
                 continue;
             }
 
@@ -62,9 +62,9 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
     int iSec;
     for(int i = 0; i < elf2->header->e_shnum; i++){
 
-        iSec = elf1->header->e_shnum + i;
+        iSec = elf1->header->e_shnum;
 
-        if(elf2->secHeaders[i].sh_type != SHT_PROGBITS && elf2->secHeaders[i].sh_type != SHT_NOBITS) {
+        if(elf2->secHeaders[i].sh_type != SHT_PROGBITS && elf2->secHeaders[i].sh_type != SHT_NOBITS && elf2->secHeaders[i].sh_type != SHT_ARM_ATTRIBUTES) {
             continue;
         }
     
@@ -88,6 +88,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
 
             Offset += elf2->secHeaders[i].sh_size;
             elfRes->header->e_shnum++;
+            
         }
     }
 }
@@ -106,13 +107,14 @@ void print_fusion(Elf *elfRes){
         print_elf_section_dump(elfRes->secHeaders, elfRes->secDumps, i);
     }
     print_elf_symbol_table(elfRes->secHeaders, elfRes->symbolTab, elfRes->strTab, elfRes->nbSym);
+    print_elf_section_header(elfRes->header, elfRes->secHeaders);
 }
 
 void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff, bool doSymValueCorrection, SectionNumberingCorrection* lSecNumCorrection){
 
     if(doSymValueCorrection && sym->st_shndx != SHN_ABS && sym->st_shndx != SHN_UNDEF){
-        //sym->st_value += lSecNumCorrection[sym->st_shndx].offset;
-        //sym->st_shndx = lSecNumCorrection[sym->st_shndx].newNumber;
+        sym->st_value += lSecNumCorrection[sym->st_shndx].offset;
+        sym->st_shndx = lSecNumCorrection[sym->st_shndx].newNumber;
     }
 
     elf->symbolTab[elf->nbSym] = *sym;
@@ -129,10 +131,6 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
 
     int strTabOff = 1;
     for(int i = 0; i < elf1->nbSym; i++){
-        /*if(ELF32_ST_BIND(elf1->symbolTab[i].st_info) == STB_LOCAL){
-            add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
-            continue;
-        }*/
 
         int j;
         for(j = 0; j < elf2->nbSym; j++){
@@ -140,9 +138,7 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
             if(strcmp((const char*)(elf1->strTab + elf1->symbolTab[i].st_name), (const char*)(elf2->strTab + elf2->symbolTab[j].st_name)) == 0){
 
                 if(ELF32_ST_BIND(elf2->symbolTab[j].st_info) == STB_LOCAL){
-                    /*if(ELF32_ST_TYPE(elf1->symbolTab[i].st_info) == 3 && ELF32_ST_TYPE(elf2->symbolTab[j].st_info) == 3 && elf1->symbolTab[i].st_shndx == elf2->symbolTab[j].st_shndx){
-                        break;
-                    }*/
+
                 }
                 else{
 
@@ -224,7 +220,7 @@ int fusion(char file1[],char file2[],char result[]) {
     elfRes->strTab = malloc((elf1->nbSym+elf2->nbSym)*30*sizeof(unsigned char));
     elfRes->header = calloc(1,sizeof(Elf32_Ehdr));
 
-    elfRes->header->e_shnum = 1; //Section nulle
+    elfRes->header->e_shnum = elf1->header->e_shnum; //Section nulle
 
     SectionNumberingCorrection lSecNumCorrection[elf2->header->e_shnum];
 
