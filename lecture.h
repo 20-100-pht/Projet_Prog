@@ -5,7 +5,7 @@
 #define ELF32_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
 
 #define STB_LOCAL 0
-#define STB_GLOBAL 0
+#define STB_GLOBAL 1
 
 #define SHN_ABS 0xfff1
 #define SHN_UNDEF 0
