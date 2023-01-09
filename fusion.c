@@ -118,14 +118,23 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
 
 /*########## Fonction Fusion Table des Symbole ##########*/
 
-void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff, bool isElf2Sym, SectionNumberingCorrection* lSecNumCorrection){
+void add_elf1_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff){
+    add_symbol(elf, sym, strTab, strTabOff);
+}
 
-    //Si le symbole est dans le 2e fichier on corrige le numéro de section associé et l'offset
-    if(isElf2Sym && sym->st_shndx != SHN_ABS && sym->st_shndx != SHN_UNDEF){
+void add_elf2_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff, SectionNumberingCorrection* lSecNumCorrection, int *lSymNumCorrection, int symIndex){
+    
+    if(sym->st_shndx != SHN_ABS && sym->st_shndx != SHN_UNDEF){
         sym->st_value += lSecNumCorrection[sym->st_shndx].offset;
         sym->st_shndx = lSecNumCorrection[sym->st_shndx].newNumber;
     }
 
+    lSymNumCorrection[symIndex] = elf->nbSym;
+    
+    add_symbol(elf, sym, strTab, strTabOff);
+}
+
+void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff){
     elf->symbolTab[elf->nbSym] = *sym;
 
     //On corrige l'offset par celui dans la nouvelle table des strings qu'on construit 
@@ -145,7 +154,7 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
 
         //On ajoute directement les symboles locaux du 1er fichier
         if(ELF32_ST_BIND(elf1->symbolTab[i].st_info) == STB_LOCAL){
-            add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff, false, lSecNumCorrection);
+            add_elf1_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
             continue;
         }
 
@@ -160,12 +169,13 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
                         fprintf(stderr, "ERREUR : Un symbole est défini 2 fois");
                         exit(EXIT_FAILURE);
                     }
+                    //Le symbole global est défini seulement dans le 2e fichier et pas dans le 1er
                     else if(elf1->symbolTab[i].st_shndx != SHN_UNDEF && elf2->symbolTab[j].st_shndx == SHN_UNDEF){      
-                        add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff, false, lSecNumCorrection);
+                        add_elf1_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
                         break;
                     }
-                    else {  //Le symbole est défini seulement dans le 1er fichier ou dans les deux
-                        add_symbol(elfRes, &elf2->symbolTab[j], elf2->strTab, &strTabOff, true, lSecNumCorrection);
+                    else {  //Le symbole global est défini seulement dans le 1er fichier ou dans les deux
+                        add_elf2_symbol(elfRes, &elf2->symbolTab[j], elf2->strTab, &strTabOff, lSecNumCorrection, lSymNumCorrection, j);
                         break;
                     }
                 }
@@ -173,7 +183,7 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
         }
         //On ajoute les symboles globaux présent seulement dans le 1er fichier
         if(j == elf2->nbSym){
-            add_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff, false, lSecNumCorrection);
+            add_elf1_symbol(elfRes, &elf1->symbolTab[i], elf1->strTab, &strTabOff);
         }
     }
 
@@ -183,7 +193,7 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
         if(ELF32_ST_BIND(elf2->symbolTab[i].st_info) == STB_LOCAL){
             //Si c'est un symbole de type section on l'ajoute seulement si il est pas déjà présent dans le 1er fichier
             if(ELF32_ST_TYPE(elf2->symbolTab[i].st_info) != 3 || lSecNumCorrection[elf2->symbolTab[i].st_shndx].newNumber >= elf1->header->e_shnum){
-                add_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff, true, lSecNumCorrection);
+                add_elf2_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff, lSecNumCorrection, lSymNumCorrection, i);
             } 
         }
         else if(ELF32_ST_BIND(elf2->symbolTab[i].st_info) == STB_GLOBAL){
@@ -195,7 +205,7 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
             }
             //Si le symbole global est présent seulement dans le 2e fichier on l'ajoute
             if(j == elf1->nbSym){   
-                add_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff, true, lSecNumCorrection);
+                add_elf2_symbol(elfRes, &elf2->symbolTab[i], elf2->strTab, &strTabOff, lSecNumCorrection, lSymNumCorrection, i);
             }
         }
     }
@@ -203,13 +213,19 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
 
 /*########## Fonction Fusion Table Relocation ##########*/
 
-void fusion_reimplantations_tables (Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection){
+void fusion_reimplantations_tables (Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection, int *lSymNumCorrection){
 
-    /*memcpy(elfRes->relocs.sect, elf1->relocs.sect, elf1->relocs.nb*sizeof(Elf32_Rel));
+    for(int i = 0; i < elf1->nbRelocSec; i++){
 
-    for(int i = 0; i < elf2->relocs.nb; i++){
-        
-    }*/
+        int sec1N = elf1->relocSecs[i].iSection;
+        for(int j = 0; j < elf2->nbRelocSec; j++){
+
+            int sec2N = elf2->relocSecs[j].iSection;
+            if(strcmp((const char*)(elf1->secHeaders[sec1N].nameNotid), (const char*)(elf2->secHeaders[sec2N].nameNotid)) == 0){
+                
+            }
+        }
+    }
 }
 
 /*########## Fonction Allocation et Liberation Memoire ##########*/
@@ -234,7 +250,6 @@ void allocation_elf_resultat(Elf *elf1, Elf *elf2, Elf *elfRes){
 void Liberation_Elf(Elf *elf){
     free(elf->header);
     free(elf->symbolTab);
-    //free(elf->relocs.sect);
     free(elf);
 }
 
@@ -284,6 +299,7 @@ int fusion(char file1[],char file2[],char result[]) {
 
     fusion_sections_simpleconcat(elf1, elf2, elfRes, lSecNumCorrection);
     fusion_symbol_tables(elf1, elf2, elfRes, lSecNumCorrection, lSymNumCorrection);
+    fusion_reimplantations_tables(elf1, elf2, elfRes, lSecNumCorrection, lSymNumCorrection);
 
     // ### Affichage ###
 

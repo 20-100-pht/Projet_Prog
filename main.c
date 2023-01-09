@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
         }
 
         FILE* file = fopen(argv[3], "rb");
-        if(file) {
+        if(file){
 
         // Initialisation du Buffer
         struct stat fileInfo;
