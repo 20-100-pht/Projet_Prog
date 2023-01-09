@@ -205,11 +205,11 @@ void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCor
 
 void fusion_reimplantations_tables (Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection){
 
-    memcpy(elfRes->relocs.sect, elf1->relocs.sect, elf1->relocs.nb*sizeof(Elf32_Rel));
+    /*memcpy(elfRes->relocs.sect, elf1->relocs.sect, elf1->relocs.nb*sizeof(Elf32_Rel));
 
     for(int i = 0; i < elf2->relocs.nb; i++){
         
-    }
+    }*/
 }
 
 /*########## Fonction Allocation et Liberation Memoire ##########*/
@@ -221,7 +221,7 @@ void allocation_elf_resultat(Elf *elf1, Elf *elf2, Elf *elfRes){
     elfRes->symbolTab = malloc((elf1->nbSym+elf2->nbSym)*sizeof(Elf32_Sym));
     elfRes->strTab = malloc((elf1->nbSym+elf2->nbSym)*30*sizeof(unsigned char));
     elfRes->header = calloc(1,sizeof(Elf32_Ehdr));
-    elfRes->relocs.sect = malloc((elf1->relocs.nb+elf2->relocs.nb)*sizeof(Elf32_Rel));
+    elfRes->relocSecs = malloc((elf1->nbRelocSec+elf2->nbRelocSec)*sizeof(Elf32_RelocSec *));
 
     // ### réecriture du header dans elfRes ###
     memcpy(elfRes->header, elf1->header, sizeof(Elf32_Ehdr) );
@@ -234,7 +234,7 @@ void allocation_elf_resultat(Elf *elf1, Elf *elf2, Elf *elfRes){
 void Liberation_Elf(Elf *elf){
     free(elf->header);
     free(elf->symbolTab);
-    free(elf->relocs.sect);
+    //free(elf->relocs.sect);
     free(elf);
 }
 

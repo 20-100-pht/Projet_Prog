@@ -23,10 +23,11 @@ typedef struct {
 } Elf32_Shdr_notELF;
 
 typedef struct {
-  Elf32_Rel *sect;
+  Elf32_Rel *rels;
+  int iSection;
   int nb;
   int offset;
-} Relocations;
+} Elf32_RelocSec;
 
 typedef unsigned char** Elf32_Sdumps;
 typedef Elf32_Shdr_notELF* Elf32_SHeaders;
@@ -38,7 +39,8 @@ typedef struct {
   Elf32_Sym *symbolTab;
   unsigned char *strTab;
   int nbSym;
-  Relocations relocs;
+  Elf32_RelocSec *relocSecs;
+  int nbRelocSec;
 } Elf;
 
 Elf *read_elf(unsigned char *buffer);
@@ -55,7 +57,7 @@ void swap_sections(Elf32_SHeaders secHeaders, Elf32_Ehdr *header);
 
 void swap_symbolTable(Elf32_Sym *symbolTable, int nbSym);
 
-void swap_Reloc_Sect(Elf32_Rel *Sect, int nb);
+void swap_reloc_secs(Elf32_RelocSec *lRelocSec, int nbRelocSec);
 
 /*########## Fonction Auxiliaire ##########*/
 
@@ -84,7 +86,7 @@ void print_elf_section_dump(Elf32_SHeaders secHeaders, Elf32_Sdumps dumps, int n
 
 void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, int nbSym);
 
-void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *Sect, int nb,  int offset);
+void print_elf_relocations_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_RelocSec *lRelocSec, int nbRelocSecs);
 
 /*########## Fonction Initialisation Struct Elf ##########*/
 

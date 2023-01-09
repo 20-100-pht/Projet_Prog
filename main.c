@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
         else if (!strcmp(argv[2], "-S")) print_elf_section_header(elf->header, elf->secHeaders);
         else if (!strcmp(argv[2], "-x") && argc == 5) print_elf_section_dump(elf->secHeaders, elf->secDumps, atoi(argv[4]));
         else if (!strcmp(argv[2], "-s")) print_elf_symbol_table(elf->secHeaders, elf->symbolTab, elf->strTab, elf->nbSym);
-        else if (!strcmp(argv[2], "-r")) print_elf_relocation_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->relocs.sect, (int)elf->relocs.nb, (int)elf->relocs.offset); // discusion bug
+        else if (!strcmp(argv[2], "-r")) print_elf_relocations_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->relocSecs, elf->nbRelocSec); // discusion bug
         else printf("Erreur nombre d'arguments\n");
         }
         else{

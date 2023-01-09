@@ -81,10 +81,13 @@ void swap_symbolTable(Elf32_Sym *symbolTable, int nbSym){
   }
 }
 
-void swap_Reloc_Sect(Elf32_Rel *Sect, int nb){
-  for(int i = 0; i < nb; i++){
-    Sect[i].r_offset = swap32(Sect[i].r_offset);
-    Sect[i].r_info = swap32(Sect[i].r_info);
+void swap_reloc_secs(Elf32_RelocSec *lRelocSec, int nbRelocSec){
+
+  for(int a = 0; a < nbRelocSec; a++){
+    for(int i = 0; i < lRelocSec[a].nb; i++){
+      lRelocSec[a].rels[i].r_offset = swap32(lRelocSec[a].rels[i].r_offset);
+      lRelocSec[a].rels[i].r_info = swap32(lRelocSec[a].rels[i].r_info);
+    }
   }
 }
 
@@ -222,15 +225,18 @@ void read_elf_symbol_table(unsigned char *buffer, Elf *elf) {
 
 void read_elf_relocation_section(unsigned char *buffer, Elf *elf) {
 
-  //On cherche la section relocation
+  elf->relocSecs = malloc(elf->header->e_shnum*sizeof(Elf32_RelocSec *));
+  elf->nbRelocSec = 0;
+
+  //On cherche les sections relocations
   for (int i = 0; i < elf->header->e_shnum; i++) {
     //Si relocation
     if (elf->secHeaders[i].sh_type == SHT_REL){
-      elf->relocs.nb = elf->secHeaders[i].sh_size / sizeof(Elf32_Rel);
-      elf->relocs.sect = malloc(elf->secHeaders[i].sh_size);
-      elf->relocs.offset = elf->secHeaders[i].sh_offset;
-      //Copie de la section reloc
-      memcpy(elf->relocs.sect, &buffer[elf->secHeaders[i].sh_offset], elf->secHeaders[i].sh_size);
+      elf->relocSecs[elf->nbRelocSec].nb = elf->secHeaders[i].sh_size / sizeof(Elf32_Rel);
+      elf->relocSecs[elf->nbRelocSec].rels = elf->secDumps[i];
+      elf->relocSecs[elf->nbRelocSec].offset = elf->secHeaders[i].sh_offset;
+      elf->relocSecs[elf->nbRelocSec].iSection = i;
+      elf->nbRelocSec++;
     }
   }
 }
@@ -481,52 +487,53 @@ void print_elf_symbol_table(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab,
     }
 }
 
-void print_elf_relocation_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_Rel *sect, int nb, int offset) {
+void print_elf_relocations_section(Elf32_Shdr_notELF *secHeaders, Elf32_Sym *symbolTab, unsigned char *strTab, Elf32_RelocSec *lRelocSec, int nbRelocSecs) {
 
-  char *numEnt;
-  if(nb == 1){
-    numEnt="entry";
-  }else{
-    numEnt="entries";
-  }
-  
-  printf("\nRelocation section '.rel.text' at offset 0x%x contains %d %s:\n Offset     Info    Type            Sym.Value  Sym. Name\n",offset, nb, numEnt);
-  for (int i = 0; i < nb; i++)
-  {
-    printf("%8.8x  ", sect[i].r_offset);
-    printf("%8.8x ", sect[i].r_info);
-    
-    switch (ELF32_R_TYPE(sect[i].r_info))
-    {
-    case R_ARM_CALL:
-      printf("R_ARM_CALL       ");
-      break;
-    case R_ARM_ABS32:
-      printf("R_ARM_ABS32      ");
-      break;
-    case R_ARM_V4BX:
-      printf("R_ARM_V4BX       ");
-      break;
-    default:
-      break;
-    }
-
-    int symInd = (sect[i].r_info >> 8);
-    if(symInd == 0){
-      printf("\n");
-      continue;
-    } 
-    printf(" %8.8x   ",symbolTab[symInd].st_value);
-
-    //Si type est section alors shstrtab sinon strtab
-    if(symbolTab[symInd].st_name == 0){
-      printf("%s\n", secHeaders[symbolTab[symInd].st_shndx].nameNotid); // Name
+  for(int a = 0; a < nbRelocSecs; a++){
+    char *numEnt;   //ATENTION ALLOCATION MEMOIRE
+    if(lRelocSec[a].nb == 1){
+      numEnt="entry";
     }else{
-      printf("%s\n", strTab + symbolTab[symInd].st_name);// Name
-      
+      numEnt="entries";
     }
-  }
+    
+    printf("\nRelocation section '%s' at offset 0x%x contains %d %s:\n Offset     Info    Type            Sym.Value  Sym. Name\n", secHeaders[lRelocSec[a].iSection].nameNotid, lRelocSec[a].offset, lRelocSec[a].nb, numEnt);
+    for (int i = 0; i < lRelocSec[a].nb; i++)
+    {
+      printf("%8.8x  ", lRelocSec[a].rels[i].r_offset);
+      printf("%8.8x ", lRelocSec[a].rels[i].r_info);
+      
+      switch (ELF32_R_TYPE(lRelocSec[a].rels[i].r_info))
+      {
+      case R_ARM_CALL:
+        printf("R_ARM_CALL       ");
+        break;
+      case R_ARM_ABS32:
+        printf("R_ARM_ABS32      ");
+        break;
+      case R_ARM_V4BX:
+        printf("R_ARM_V4BX       ");
+        break;
+      default:
+        break;
+      }
 
+      int symInd = (lRelocSec[a].rels[i].r_info >> 8);
+      if(symInd == 0){
+        printf("\n");
+        continue;
+      } 
+      printf(" %8.8x   ",symbolTab[symInd].st_value);
+
+      //Si type est section alors shstrtab sinon strtab
+      if(symbolTab[symInd].st_name == 0){
+        printf("%s\n", secHeaders[symbolTab[symInd].st_shndx].nameNotid); // Name
+      }else{
+        printf("%s\n", strTab + symbolTab[symInd].st_name);// Name
+        
+      }
+    }
+  } 
 }
 
 /*########## Fonction Initialisation Struct Elf ##########*/
@@ -558,12 +565,12 @@ Elf *read_elf(unsigned char *buffer){
       swap_symbolTable(elf->symbolTab, elf->nbSym);
 
       // Table des dumps des sections
-      Elf32_Sdumps sectionDumps = read_elf_section_dump(header, sectionsHeaders, buffer);
-      elf->secDumps = sectionDumps;
+      Elf32_Sdumps sectionsDumps = read_elf_section_dump(header, sectionsHeaders, buffer);
+      elf->secDumps = sectionsDumps;
 
-      // Table Relocation 
+      // Table Relocation
       read_elf_relocation_section(buffer, elf);
-      swap_Reloc_Sect(elf->relocs.sect, elf->relocs.nb);
+      swap_reloc_secs(elf->relocSecs, elf->nbRelocSec);
       return elf;
 }
 
@@ -576,5 +583,5 @@ void print_global_elf(Elf *elf, unsigned char *buffer){
     print_elf_section_dump(elf->secHeaders, elf->secDumps, i);
   }
   print_elf_symbol_table(elf->secHeaders, elf->symbolTab, elf->strTab, elf->nbSym);
-  print_elf_relocation_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->relocs.sect, elf->relocs.nb, elf->relocs.offset);
+  print_elf_relocations_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->relocSecs, elf->nbRelocSec);
 }
