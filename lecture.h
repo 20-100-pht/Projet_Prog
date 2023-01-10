@@ -63,6 +63,8 @@ void swap_reloc_secs(Elf32_RelocSec *lRelocSec, int nbRelocSec);
 
 int is32_B_E(Elf32_Ehdr *header);
 
+int get_section_index_from_type(Elf *elf, char *secType);
+
 //Fonction pour recuperer les flags de chaque section
 void get_flag(int flag, char *str_flag);
 

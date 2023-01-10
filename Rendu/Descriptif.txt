@@ -8,9 +8,6 @@ Main
       fusion   --  fusion des différentes sections, tables des symboles et nom de sections
                \   reste a venir ;;; la suite dans le prochain épisode 
     
-    ### Main
-    Appels aux fonctions de lecture ou de fusion selon les arguments donnés. 
-
 
     ### Lecture.c
     Récupère les informations du format ELF d'un fichier, 

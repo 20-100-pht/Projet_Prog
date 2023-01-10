@@ -42,7 +42,7 @@ function line_test(){
     sortieB=$(readelf $read_type $fichier)
   fi
 
-  END=$(echo "$sortieA" | wc -l) 
+  END=$(echo "$sortieB" | wc -l) 
   for ((i=1;i<=END;i++)); do
     
     ligneA=$(echo "$sortieA" | sed -n "$i p")
@@ -58,7 +58,7 @@ function line_test(){
     fi
 
     #On recupere le nombre de sections.
-    num=$(echo $ligneA | grep -oh 'Section header string table index: [0-9]')
+    num=$(echo $ligneA | grep -oh 'Section header string table index: [0-9][0-9]*')
     num=$(echo $num | awk '{ print $NF }')
     if [[ $num != "" ]]
     then
@@ -82,10 +82,10 @@ function section_reloc_test(){
 
   if [[ $rt -eq 0 ]]
   then
-    echo -e $vertB"Test_symb_tab : $(basename $fichier) REUSSI."$blanc$'\n'
+    echo -e $vertB"Test_reloc : $(basename $fichier) REUSSI."$blanc$'\n'
   elif [[ $rt -ne -1 ]]
   then
-    echo -e $rougeB"Test_symb_tab : $rt erreurs trouvées dans $(basename $fichier), ECHEC"$blanc$'\n'
+    echo -e $rougeB"Test_reloc : $rt erreurs trouvées dans $(basename $fichier), ECHEC"$blanc$'\n'
   fi
 }
 

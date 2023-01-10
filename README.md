@@ -5,10 +5,13 @@ PROG5 - Projet, année 2022-2023 Réalisation d’un éditeur de liens — Phase
 
 # Compilation # 
 
-CFLAGS='' ./configure
+CFLAGS='' ./configure (uniquement lors de la première compilation)
 make
 
 # Utilisation du programme 
+
+Affichage du mode d'emploi: 
+./main <-h> 
 
 Cas de lecture d'un seul fichier : 
 ./main <-l> <option> <nom_fichier>
@@ -45,8 +48,8 @@ Nous utilisons un test automatisé pour la lecture de fichier :
     De plus à la fin des lignes vertes et rouges il y a une flèche suivie d'un nombre(->10) indiquant le numéro de la ligne 
     du résultat attendu et du résultat obtenu. Ceci permet de voir si il y a une ligne qui à été oubliée dans notre version. 
 
-    Enfin il y a une option de debug qui va afficher toutes les lignes qui sont présentes dans les deux résultats. 
-
+    Enfin il y a une option de debug qui va afficher toutes les lignes qui sont présentes dans les deux résultats en plus de
+    l'affichage précédent. 
 
 
 Utilisation du programmme de test  :
@@ -59,6 +62,10 @@ Utilisation du programmme de test  :
 
 ./test.sh <-d> <fichier.o>
     On va tester le fichier.o avec l'option de debug.
+
+
+./mainTest.sh <dossier>
+    Affichage simplifié des tests (il est seulement indiqué si le test est passé ou non).
 
 
 ATTENTION : Pour vérifier que notre programme fonctionne bien nous comparons nos sorties aux sorties de la commande 
@@ -87,14 +94,14 @@ Main
         - Fonction Swap little endian à big endian 
         - Fonction Auxiliaire a la lecture, qui permettent de vérifier que le fichier soit bien en big endian et qui permet 
         de récupérer les flags de chaque section
-        - Fonction Lecture en mémoire vers struct Elf : 
-        - Fonction Affichage struct Elf : 
-        - Fonction Initialisation Struct Elf :
+        - Fonction Lecture en mémoire vers struct Elf
+        - Fonction Affichage struct Elf
+        - Fonction Initialisation Struct Elf
         - Affichage Global qui appelle selon les arguments donnés les autres fonctions d'affichages (header, section) 
 
     ### Fusion.c 
         - Fonction de concaténation de sections : Concatène les sections lorsque c'est nécéssaire sinon, les copie dans le fichier résultat. 
-        - add_symbol : 
+        - add_symbol (et fonctions auxiliaires): 
         - fusion_symbol_tables :
         - fusion :
         - Affichage Global qui appelle selon les arguments donnés les autres fonctions d'affichages (header, section) 

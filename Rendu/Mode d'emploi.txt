@@ -5,6 +5,9 @@ make
 
 # Utilisation du programme 
 
+Affichage du mode d'emploi : 
+./main <-h> 
+
 Cas de lecture d'un seul fichier : 
 ./main <-l> <option> <nom_fichier>
     Options :

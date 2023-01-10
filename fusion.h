@@ -21,7 +21,7 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumb
 
 void add_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff);
 void add_elf1_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff);
-void add_elf2_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff, SectionNumberingCorrection* lSecNumCorrection, int *lSymNumCorrection, , int symIndex);
+void add_elf2_symbol(Elf *elf, Elf32_Sym *sym, unsigned char* strTab, int *strTabOff, SectionNumberingCorrection* lSecNumCorrection, int *lSymNumCorrection, int symIndex);
 
 void fusion_symbol_tables(Elf *elf1, Elf *elf2, Elf *elfRes, SectionNumberingCorrection* lSecNumCorrection, int *lSymNumCorrection);
 
@@ -33,7 +33,7 @@ void fusion_reimplantations_tables (Elf *elf1, Elf *elf2, Elf *elfRes, SectionNu
 
 void allocation_elf_resultat(Elf *elf1, Elf *elf2, Elf *elfRes);
 
-void Liberation_Elf(Elf *elf);
+void liberation_elf(Elf *elf);
 
 /*########## Fonction Fusion Global ##########*/
 
