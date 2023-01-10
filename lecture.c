@@ -98,7 +98,7 @@ int is32_B_E(Elf32_Ehdr *header){
 int get_section_index_from_name(Elf *elf, char *secName){
 
   for(int i = 0; i < elf->header->e_shnum; i++){
-    if(strcmp(elf->secHeaders[i].nameNotid, secName) == 0) return i;
+    if(strcmp((const char*)elf->secHeaders[i].nameNotid, secName) == 0) return i;
   }
   return -1;
 }

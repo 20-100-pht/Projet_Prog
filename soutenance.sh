@@ -40,7 +40,7 @@ echo -e $jaune"Affichage de la table des sections : $nl"$blanc
 suivant
 
 #Affichage du contenu d'un section
-echo -e $jaune"Affichage du contenu d'un section : $nl"$blanc
+echo -e $jaune"Affichage du contenu d'une section : $nl"$blanc
 ./main -l -x tests/test1BON.o 1
 
 suivant
