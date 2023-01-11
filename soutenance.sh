@@ -57,11 +57,6 @@ echo -e $jaune"Affichage des tables de reimplantation : $nl"$blanc
 
 suivant
 
-echo -e $jaune"Fusion de deux fichiers ELF : $nl"$blanc
-./main -f ./tests/test1BON.o ./tests/test2BON.o ./tests/ResultTest1-2BON.o
-
-suivant
-
 echo -e $jaune"Tests : $nl"$blanc
 ./mainTest.sh ./tests/
 
@@ -73,13 +68,14 @@ do
     if [[ $test == t ]]
     then
         ./test.sh ./tests/test1BON.o
-    fi
-
-    if [[ $test == d ]]
+    elif [[ $test == d ]]
     then
         ./test.sh -d ./tests/test1BON.o
+    elif [[ $test == f ]]
+    then 
+        echo -e $jaune"Fusion de deux fichiers ELF : $nl"$blanc
+        ./main -f ./tests/test1BON.o ./tests/test2BON.o ./tests/ResultTest1-2BON.o
     fi
-
     echo -n "$nl Commande : "
     read test
 done

@@ -23,7 +23,7 @@ void help(){
         -r : Afficher les tables de reimplantation d'un fichier ELF pour machine ARM (relocation section)\n\
         -x : Affiche le contenu de l'une des sections d'un fichier ELF (section dump) \n\
         NOTE : pour cette option il est necessaire d'ajouter un 4eme argument, le numero de la section que l'on souhaite afficher\n\
-        profil : ./main <-l> <-x> <numero de la section a afficher> <nom_fichier>\n\
+        profil : ./main <-l> <-x> <nom_fichier> <numero de la section a afficher> \n\
         NOTE 2 : L'option -a affiche toutes les sections du fichier.\n\
         \n\
     Cas de fusion de fichiers ELF :\n\

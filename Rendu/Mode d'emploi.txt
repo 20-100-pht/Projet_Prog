@@ -18,7 +18,7 @@ Cas de lecture d'un seul fichier :
         "-r" : Afficher les tables de reimplantation d’un fichier ELF pour machine ARM (relocation section)
         "-x" : Affiche le contenu de l’une des sections d’un fichier ELF (section dump)
         NOTE : pour cette option il est necessaire d'ajouter un 4eme argument, le numero de la section que l'on souhaite afficher 
-        profil : ./main <-l> <-x> <numero de la section a afficher> <nom_fichier>
+        profil : ./main <-l> <-x> <nom_fichier> <numero de la section a afficher> 
         NOTE 2 : L'option "-a" affiche toutes les sections du fichier.
 
 Cas de fusion de fichiers ELF : 
