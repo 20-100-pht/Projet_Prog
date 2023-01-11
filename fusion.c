@@ -41,9 +41,6 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SecNumCorre
             continue;
         }
 
-        /*elfRes->secHeaders[i].sh_type = elf1->secHeaders[i].sh_type;
-        elfRes->secHeaders[i].nameNotid = elf1->secHeaders[i].nameNotid;
-        elfRes->secHeaders[i].sh_size = elf1->secHeaders[i].sh_size;*/
         elfRes->secHeaders[iSec] = elf1->secHeaders[i];
 
         int j;
@@ -99,10 +96,6 @@ void fusion_sections_simpleconcat(Elf *elf1, Elf *elf2, Elf *elfRes, SecNumCorre
             }
         }
         if(j == elf1->header->e_shnum){   
-
-            /*elfRes->secHeaders[iSec].sh_type = elf1->secHeaders[i].sh_type;
-            elfRes->secHeaders[iSec].nameNotid = elf2->secHeaders[i].nameNotid;
-            elfRes->secHeaders[iSec].sh_size = elf2->secHeaders[i].sh_size;*/
 
             elfRes->secHeaders[iSec] = elf2->secHeaders[i];
 

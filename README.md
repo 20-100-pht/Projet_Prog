@@ -82,7 +82,7 @@ doivent êtres également en anglais et donc linux doit être configuré en angl
 Main 
      \         /   écriture des fichiers dans des buffer en mémoire et écriture info des buffer dans des structures elf  (appel à lecture)
       fusion   --  fusion des différentes sections, tables des symboles et nom de sections
-               \   reste a venir ;;; la suite dans le prochain épisode 
+               \   fonctionnalité manquantes ( étapes 8 et 9 )
     
     ### Main
     Appels aux fonctions de lecture ou de fusion selon les arguments donnés. 
@@ -93,7 +93,7 @@ Main
     les stocke dans une structure et les affiche selon les options données en argument.
         - Fonction Swap little endian à big endian 
         - Fonction Auxiliaire a la lecture, qui permettent de vérifier que le fichier soit bien en big endian et qui permet 
-        de récupérer les flags de chaque section
+            de récupérer les flags de chaque section
         - Fonction Lecture en mémoire vers struct Elf
         - Fonction Affichage struct Elf
         - Fonction Initialisation Struct Elf
@@ -111,8 +111,6 @@ Main
         - Main : Permet d'appeler le code ci-dessus en fonction des arguments reçus.
 
 
-   
-
 
 # Autres  
 Compilation d'un fichier en 32 bits big endian :
@@ -120,9 +118,6 @@ arm-none-eabi-gcc -mbig-endian -c <fichier>
 
 Fusion de deux fichiers 32 bits big endian :
 arm-none-eabi-ld -EB -r -o <fichier_destination> <fichier1.o> <fichier2.o>
-
-
-
 
 ###
 Custom ELF Loader intended for pedagogic use

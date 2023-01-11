@@ -74,7 +74,10 @@ int main(int argc, char *argv[]){
             if (!strcmp(argv[2], "-a")) print_global_elf(elf, buffer);
             else if (!strcmp(argv[2], "-h")) print_elf_header(elf->header);
             else if (!strcmp(argv[2], "-S")) print_elf_section_header(elf->header, elf->secHeaders);
-            else if (!strcmp(argv[2], "-x") && argc == 5) print_elf_section_dump(elf->secHeaders, elf->secDumps, atoi(argv[4]));
+            else if (!strcmp(argv[2], "-x") && argc == 5){
+                if( (elf->header->e_shnum > atoi(argv[4]) ) && ( atoi(argv[4]) >= 0 ) ) print_elf_section_dump(elf->secHeaders, elf->secDumps, atoi(argv[4]));
+                else printf("L'argument < x > n'est pas compris en 0 et %d inclus\n", elf->header->e_shnum-1);
+            }
             else if (!strcmp(argv[2], "-s")) print_elf_symbol_table(elf->secHeaders, elf->symbolTab, elf->strTab, elf->nbSym);
             else if (!strcmp(argv[2], "-r")) print_elf_relocations_section(elf->secHeaders, elf->symbolTab, elf->strTab, elf->relocSecs, elf->nbRelocSec); 
             else printf("Erreur nombre d'arguments\n");

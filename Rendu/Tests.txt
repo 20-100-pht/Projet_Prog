@@ -8,6 +8,8 @@ Ces tests permettent de vérifier que le programme fonctionne comme attendu.
 - Test 6 : Erreur "aléatoire" (écriture dans le fichier compilé)
 - Test 7 : Erreur Magic number (ELF -> FLE)
 - Test 8 : Erreur : fichier en 32 bits little endian
+- ResultTest1-2 : fichier résultat de la fusion de test1 et test2 a l'aide de arm-none-eabi-ld
+- ResultFile1-2 : fichier résultat de la fusion de file1 et file2 a l'aide de arm-none-eabi-ld
 
 
 On rajoute dans le nom des fichiers "BON" ou "MAUV" pour savoir si ce fichier est correcte et donc si le résultat attendu est une erreur ou 
